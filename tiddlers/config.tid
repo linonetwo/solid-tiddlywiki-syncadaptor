@@ -32,3 +32,10 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 </$reveal>
 </$reveal>
+
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName">
+  <$button>
+    <$action-sendmessage $message="tm-login"/>
+    <<lingo Login>>
+  </$button>
+</$reveal>

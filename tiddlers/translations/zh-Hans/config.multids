@@ -14,3 +14,5 @@ UserNameDescription: 你在 SoLiD 上通过 OIDC 用户名密码登录时输入�
 Password: 密码
 PasswordDescription: 与上述用户名相对应的密码
 YourSyncingLocation: 你的 TiddlyWiki 将会与这个地址下的文件保持同步
+
+Login: 登录
