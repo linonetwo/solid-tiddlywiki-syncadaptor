@@ -12,7 +12,8 @@
     "browser": false
   },
   "globals": {
-    "fetch": true
+    "fetch": true,
+    "$tw": true
   },
   "rules": {
     "linebreak-style": 0,

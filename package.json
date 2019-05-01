@@ -4,10 +4,11 @@
   "description": "Another attempt to make tiddlywiki a frontend for SoLiD Server.",
   "main": "index.js",
   "scripts": {
-    "start": "npm run clean && tiddlywiki demo-wiki --init server && npm run copy:mkdir && npm run copy:tiddly && npm run copy:js && tiddlywiki demo-wiki --listen",
+    "start": "npm run clean && tiddlywiki demo-wiki --init server && npm run copy:mkdir && npm run copy:tiddly && npm run copy:js && npm run serve",
+    "serve": "tiddlywiki demo-wiki --listen",
     "copy:mkdir": "mkdir ./demo-wiki/tiddlers && mkdir -p ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor",
     "copy:tiddly": "cp -a ./tiddlers/. ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor && node ./scripts/addToPluginList.js && node ./scripts/createDefaultTiddlers.js",
-    "copy:js": "npm run build && cp ./dist/SyncAdaptor.js ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js",
+    "copy:js": "npm run build && cp ./dist/SyncAdaptor.js ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js && cp ./src/SyncAdaptor.js.meta ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js.meta",
     "clean": "rimraf ./dist ./demo-wiki",
     "dev": "NODE_ENV=development webpack --watch --mode development",
     "build": "NODE_ENV=production webpack --mode production",
