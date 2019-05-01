@@ -3,7 +3,7 @@ require('dotenv').config();
 
 module.exports = {
   devtool: process.env.NODE_ENV === 'development' ? 'inline-source-map' : false,
-  entry: './src/SyncAdaptor.js',
+  entry: './src/index.js',
   output: {
     filename: 'SyncAdaptor.js',
     path: path.resolve(__dirname, 'dist'),

@@ -1,4 +1,5 @@
 // @flow
+import solidAuthClient from 'solid-auth-client';
 
 class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
@@ -26,12 +27,20 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   getStatus(callback: (error?: Error, isLoggedIn: boolean, username?: string) => void) {
     // try access index file, if no then create one. This operation's success means login's success
-    // console.log('getStatus');
+    solidAuthClient.trackSession(session => {
+      if (!session) {
+        // The user is not logged in
+        callback(undefined, true, session.webId);
+      } else {
+        // `The user is ${session.webId}`
+        callback(undefined, false);
+      }
+    });
   }
 
   /** Attempts to login to the server with specified credentials. This method is optional. */
   login(username: string, password: string, callback: Function) {
-    // console.log('login');
+    console.log('login');
   }
 
   /** Attempts to logout of the server. This method is optional. */
