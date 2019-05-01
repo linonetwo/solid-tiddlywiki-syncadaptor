@@ -1,0 +1,13 @@
+{
+  "presets": [["@babel/preset-env", { "targets": { "node": "current" } }]],
+  "plugins": [
+    "macros",
+    "@babel/plugin-proposal-do-expressions",
+    "@babel/plugin-proposal-optional-chaining",
+    "@babel/plugin-syntax-flow",
+    "@babel/plugin-transform-flow-strip-types",
+    "babel-plugin-array-last-index",
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["flow-runtime", { "assert": true, "annotate": true, "warn": true }]
+  ]
+}
