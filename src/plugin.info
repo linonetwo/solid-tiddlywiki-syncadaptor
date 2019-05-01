@@ -1,0 +1,9 @@
+{
+	"title": "$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor",
+	"description": "SoLiD TW SyncAdaptor: Sync with SoLiD Server",
+	"author": "linonetwo",
+	"version": "0.0.1",
+	"core-version": ">=5.1.0",
+	"source": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor",
+	"plugin-type": "plugin"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "solid-tiddlywiki-syncadaptor",
+  "version": "0.0.1",
+  "description": "Another attempt to make tiddlywiki a frontend for SoLiD Server.",
+  "main": "index.js",
+  "scripts": {
+    "start": "rimraf ./demo-wiki && tiddlywiki demo-wiki --init server && mkdir ./demo-wiki/plugins && mkdir ./demo-wiki/tiddlers && cp -r ./src ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor && node ./scripts/addToPluginList.js && node ./scripts/createDefaultTiddlers.js && tiddlywiki demo-wiki --listen",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linonetwo/solid-tiddlywiki-syncadaptor.git"
+  },
+  "keywords": [
+    "solid",
+    "tiddlywiki"
+  ],
+  "author": "linonetwo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor/issues"
+  },
+  "homepage": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "rimraf": "^2.6.3",
+    "tiddlywiki": "^5.1.19"
+  }
+}

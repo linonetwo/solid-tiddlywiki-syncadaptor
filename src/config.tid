@@ -1,0 +1,34 @@
+title: $:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/config
+caption: SoLiD SyncAdaptor
+tags: [[$:/tags/ControlPanel/Saving]]
+
+\define lingo-base() $:/language/ControlPanel/Saving/SoLiD/Config
+
+\define wikiRootURI() https://$(userName)$.$(IDPHost)$/$(rootFolder)$
+
+\define wikiRootLink()
+  <$set name="userName" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName}}>
+  <$set name="IDPHost" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName}}>
+  <$set name="rootFolder" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder}}>
+    <<wikiRootURI>>
+  </$set>
+  </$set>
+  </$set>
+\end
+
+|<<lingo Field>>|<<lingo Value>>|<<lingo Description>>|
+|<<lingo IDPHostName>>|<$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName" default="" tag="input"/> |<<lingo IDPHostNameDescription>>|
+||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName" text=""><<lingo Example>> solid.inrupt.com</$reveal>|
+|<<lingo RootFolder>>| <$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" tag="input" default="" /> |<<lingo RootFolderDescription>>|
+||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" text=""><<lingo Example>> public/tiddly</$reveal>|
+|<<lingo UserName>>|<$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName" default="" tag="input"/> |<<lingo UserNameDescription>>|
+||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName" text=""><<lingo Example>> timbl</$reveal>|
+|<<lingo Password>>|<$password name="solid-tiddlywiki-syncadaptor"/> |<<lingo PasswordDescription>>|
+
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName">
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName">
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder">
+  <<lingo YourSyncingLocation>> <<wikiRootLink>>
+</$reveal>
+</$reveal>
+</$reveal>

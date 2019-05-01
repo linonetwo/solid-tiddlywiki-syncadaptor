@@ -1,0 +1,16 @@
+title: $:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about
+caption: SoLiD SyncAdaptor
+type: text/vnd.tiddlywiki
+
+\define lingo-base() $:/language/ControlPanel/Saving/SoLiD/About
+
+This plugin provides a [[syncadaptor|https://tiddlywiki.com/dev/#SyncAdaptorModules]] module for saving changes on a [[Solid Pod|https://github.com/solid/node-solid-server]] server.
+
+[[github.com/linonetwo/solid-tiddlywiki-syncadaptor|https://github.com/linonetwo/solid-tiddlywiki-syncadaptor]]
+
+<$button>
+  <$action-setfield $tiddler="$:/state/tab-1749438307" text="$:/core/ui/ControlPanel/Saving"/>
+  <$action-setfield $tiddler="$:/state/tab-2065006209" text="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/config"/>
+  <$action-navigate $to="$:/ControlPanel"/>
+  <<lingo GoToControlPanel>>
+</$button>
