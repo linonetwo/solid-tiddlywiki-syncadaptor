@@ -20,8 +20,8 @@ module.exports = {
       },
     ],
   },
-  // optimization: {
-  //   minimize: false,
-  // },
+  optimization: {
+    minimize: process.env.NODE_ENV !== 'development',
+  },
   externals: [],
 };
