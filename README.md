@@ -2,27 +2,35 @@
 
 Another attempt to make tiddlywiki a frontend for SoLiD Server.
 
+## What this project does
+
+[TiddlyWiki](http://tiddlywiki.com/) is a programmable notebook with lots of plugins and potential (for example [becomes Jupyter notebook's alternative](https://github.com/Jermolene/TiddlyWiki5/pull/3461)).
+
+[SoLiD](https://solid.mit.edu/) is a proposed set of conventions and tools for building decentralized social applications based on Linked Data principles.
+
+SoLiD POD (Person Owned Data) is a great place to store TiddlyWiki Tiddlers (executable Note with metadata). By using this [Syncadaptor](https://tiddlywiki.com/dev/#Syncadaptor), you can sync TiddlyWiki data between mobile phone and computer, enable partial wiki sharing (sharing only a part of your wiki), collaborating (by allowing your friends write to your SoLiD POD).
+
 ## Files stored on the POD
 
 Only user modified tiddlers will be synced to the SoLiD POD, likes `$:/StoryList` and other user created tiddlers.
 
-### Privacy
+## Privacy
 
-#### Share with certain friends
+### Share with certain friends
 
 SoLiD have `/public` and `/inbox` (or `/private`), file on `/inbox` folder (which is a private container) is invisible to anyone not in your Web Access Control List, normally this ACL file is located in `/private/tiddlywiki/.acl` (?), if you choose to place some your tiddlers inside `/private/tiddlywiki`. You can change this ACL file using SoLiD's data browser web page, or using other SoLiD Apps, to share some tiddler with limited friends.
 
-#### Set a tiddler private
+### Set a tiddler private
 
 You can set a tiddler belongs to a container use `solid-sync` tiddler field, for example, `solid-sync: /private/tiddlywiki/main`. If this tiddler field is unset, this sync adaptor will assign one for it, by default the first one in the `$:/ControlPanel/Saving`'s TWContainers field.
 
 `solid-sync` field accepts string or **array**, so you can assign a tiddler to more than one container, for example one container for draft, one container for publish.
 
-#### Data structure
+### Data structure
 
 This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [Syncadaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend).
 
-#### Please set a location to store tiddler before you login
+### Please set a location to store tiddler before you login
 
 Containers can located at `/public/tiddlywiki/main` for example, you must set at least one location in `$:/ControlPanel/Saving`'s `SoLiD SyncAdaptor` tab's TWContainers field, before you can login in the `$:/ControlPanel/Saving`.
 
@@ -36,7 +44,7 @@ you can add more than one index files in the `$:/ControlPanel/Saving`, each in a
 
 Note that this config field is located in `$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers` and will also be sync to your POD, it's better to set this file public for convenience.
 
-#### If you can not access private resources
+### If you can not access private resources
 
 See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github.com/solid/node-solid-server#upgrading-from-version-4)
 
@@ -45,6 +53,8 @@ See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github
 ## Todo
 
 Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3).
+
+Collaborating should consider diff and conflict.
 
 ## Acknowledgements
 
