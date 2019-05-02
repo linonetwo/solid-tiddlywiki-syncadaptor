@@ -2,6 +2,11 @@ title: $:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/styles
 tags: [[$:/tags/Stylesheet]]
 type: text/css
 
+.solid-gradiant-background {
+  background: linear-gradient(to right, #7C4DFF 0%, #18A9E6 50%, #01C9EA 100%);
+  color: whtie;
+}
+
 .solid-filled-button {
   padding: 0.5em 4em;
   width: 100%;
@@ -9,7 +14,7 @@ type: text/css
   cursor: pointer;
   color: white;
   background-color: #7c4dff;
-  border: 1px solid #7c4dff;
+  border: none;
   border-radius: 4px;
 }
 .solid-filled-button:hover {

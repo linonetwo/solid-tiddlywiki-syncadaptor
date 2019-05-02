@@ -8,7 +8,7 @@ This plugin provides a [[syncadaptor|https://tiddlywiki.com/dev/#SyncAdaptorModu
 
 [[github.com/linonetwo/solid-tiddlywiki-syncadaptor|https://github.com/linonetwo/solid-tiddlywiki-syncadaptor]]
 
-<$button>
+<$button class="solid-gradiant-background solid-filled-button" >
   <$action-setfield $tiddler="$:/state/tab-1749438307" text="$:/core/ui/ControlPanel/Saving"/>
   <$action-setfield $tiddler="$:/state/tab-2065006209" text="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/config"/>
   <$action-navigate $to="$:/ControlPanel"/>
