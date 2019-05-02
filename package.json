@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run clean && tiddlywiki demo-wiki --init server && npm run copy:mkdir && npm run copy:tiddly && npm run copy:js && npm run serve",
     "dev": "concurrently \"npm run dev:build\" \"nodemon --watch ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js --exec 'npm run serve'\" ",
-    "serve": "tiddlywiki demo-wiki --listen",
+    "serve": "tiddlywiki demo-wiki --listen host=localhost",
     "dev:build": "NODE_ENV=development webpack --watch --mode development -o ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js",
     "copy:mkdir": "mkdir ./demo-wiki/tiddlers && mkdir -p ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor",
     "copy:tiddly": "cp -a ./tiddlers/. ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor && node ./scripts/addToPluginList.js && node ./scripts/createDefaultTiddlers.js",
