@@ -71,12 +71,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
     console.log('getSkinnyTiddlers');
     // this will create a index for tiddlywiki on the POD if we don't have one
     // and return turtle files describing all tiddlers' metadata
-    const indexTtlFiles = await this.getTWIndexFilesOnPOD();
+    const indexTtlFiles = await this.getTWContainersOnPOD();
 
     const parser = new Parser({ format: 'Turtle' });
     const parsedRdfQuads = indexTtlFiles.map(ttlFile => parser.parse(ttlFile));
     const store = new Store();
-    parsedRdfQuads.forEach(quads => store.addQuads(quads))
+    parsedRdfQuads.forEach(quads => store.addQuads(quads));
     const queryEngine = newEngine();
     const result = await queryEngine.query('SELECT * { ?s ?p ?o }', {
       sources: [{ type: 'rdfjsSource', value: store }],
@@ -128,25 +128,25 @@ class SoLiDTiddlyWikiSyncAdaptor {
   }
 
   /** Scan index files, return the content, create if no exists */
-  async getTWIndexFilesOnPOD(): Promise<string[]> {
+  async getTWContainersOnPOD(): Promise<string[]> {
     const session: SoLiDSession | null = await solidAuthClient.currentSession();
     const currentWebIDString: ?string = session?.webId;
-    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles');
+    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/Containers');
 
     // guards
     if (!currentWebIDString) {
-      throw new Error('SOLID000 getTWIndexFilesOnPOD() get called without login, abort login()');
+      throw new Error('SOLID000 getTWContainersOnPOD() get called without login, abort login()');
     }
     if (!indexFilesString) {
       throw new Error(
-        'SOLID001 getTWIndexFilesOnPOD() get called while IndexFiles textarea is unfilled, abort login()',
+        'SOLID001 getTWContainersOnPOD() get called while Containers textarea is unfilled, abort login()',
       );
     }
     let currentWebIDURL;
     try {
       currentWebIDURL = new URL(currentWebIDString);
     } catch (error) {
-      throw new Error(`SOLID002 getTWIndexFilesOnPOD() receives bad WebID ${currentWebIDString}`);
+      throw new Error(`SOLID002 getTWContainersOnPOD() receives bad WebID ${currentWebIDString}`);
     }
 
     const indexFiles: Array<string> = indexFilesString.split('\n');
@@ -161,7 +161,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       )
     ) {
       throw new Error(
-        `SOLID003 getTWIndexFilesOnPOD() get called, but some IndexFiles is invalid ${JSON.stringify(
+        `SOLID003 getTWContainersOnPOD() get called, but some Containers is invalid ${JSON.stringify(
           indexFiles,
           null,
           '  ',

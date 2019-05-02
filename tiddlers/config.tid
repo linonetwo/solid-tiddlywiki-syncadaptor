@@ -5,11 +5,11 @@ tags: [[$:/tags/ControlPanel/Saving]]
 \define lingo-base() $:/language/ControlPanel/Saving/SoLiD/Config
 
 \define example-and-refresh-button()
-<$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+<$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers">
   <<lingo Example>> /public/tiddlywiki/main.ttl
 </$reveal>
 <$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
-<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers">
   <$button class="solid-button-small" style="margin-top: 15px" >
     <$action-sendmessage $message="tm-server-refresh"/>
     <<lingo Refresh>>
@@ -21,8 +21,8 @@ tags: [[$:/tags/ControlPanel/Saving]]
 <div class="solid-card">
 
 |<<lingo Field>>|<<lingo Value>>|
-|<<lingo IndexFiles>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles" tag="textarea" default="" />|
-|<<example-and-refresh-button>>|<<lingo IndexFilesDescription>>|
+|<<lingo TWContainers>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers" tag="textarea" default="" />|
+|<<example-and-refresh-button>>|<<lingo TWContainersDescription>>|
 
 </div>
 
@@ -38,13 +38,13 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 
 <$reveal type="nomatch" text="yes" state="$:/status/IsLoggedIn">
-  <$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+  <$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers">
     <$button class="solid-filled-button" >
       <$action-sendmessage $message="tm-login-solid"/>
       <<lingo Login>>
     </$button>
   </$reveal>
-  <$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+  <$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers">
     <$button class="solid-button-disabled" >
       <<lingo CantLogin>>
     </$button>
