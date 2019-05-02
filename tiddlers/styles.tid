@@ -50,6 +50,17 @@ type: text/css
   outline: none;
 }
 
+.solid-button-small {
+  appearance: none;
+  color: #354866;
+  border: 1px solid #DAE0E6;
+  border-radius: 4px;
+  font-size: .8em;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  outline: none;
+}
+
 .solid-card {
   display: flex;
 	border-radius: 4px;

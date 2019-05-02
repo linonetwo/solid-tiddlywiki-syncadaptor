@@ -4,11 +4,25 @@ tags: [[$:/tags/ControlPanel/Saving]]
 
 \define lingo-base() $:/language/ControlPanel/Saving/SoLiD/Config
 
+\define example-and-refresh-button()
+<$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+  <<lingo Example>> /public/tiddlywiki/main.ttl
+</$reveal>
+<$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
+<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+  <$button class="solid-button-small" style="margin-top: 15px" >
+    <$action-sendmessage $message="tm-server-refresh"/>
+    <<lingo Refresh>>
+  </$button>
+</$reveal>
+</$reveal>
+\end
+
 <div class="solid-card">
 
 |<<lingo Field>>|<<lingo Value>>|
 |<<lingo IndexFiles>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles" tag="textarea" default="" />|
-|<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles" text=""><<lingo Example>> /public/tiddlywiki/main.ttl</$reveal>|<<lingo IndexFilesDescription>>|
+|<<example-and-refresh-button>>|<<lingo IndexFilesDescription>>|
 
 </div>
 
