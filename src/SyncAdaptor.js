@@ -132,7 +132,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   async getTWContainersOnPOD(): Promise<string[]> {
     const session: SoLiDSession | null = await solidAuthClient.currentSession();
     const currentWebIDString: ?string = session?.webId;
-    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/Containers');
+    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers');
 
     // guards
     if (!currentWebIDString) {
@@ -191,7 +191,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       fileContents
         .filter(item => item.status === 404)
         .map(itemToCreate => {
-          return SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(itemToCreate.uri);
+          return SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(itemToCreate.uri, true);
         }),
     );
 
