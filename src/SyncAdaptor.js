@@ -4,6 +4,7 @@ import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
 import { newEngine } from '@comunica/actor-init-sparql-rdfjs';
 import { Store, Parser } from 'n3';
+import { compact } from 'lodash';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -149,7 +150,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       throw new Error(`SOLID002 getTWContainersOnPOD() receives bad WebID ${currentWebIDString}`);
     }
 
-    const indexFiles: Array<string> = indexFilesString.split('\n');
+    const indexFiles: Array<string> = compact(indexFilesString.split('\n'));
     // currently Node Solid Server supports following root location
     if (
       !indexFiles.every(
