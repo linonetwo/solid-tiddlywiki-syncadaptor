@@ -83,7 +83,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       sources: [{ type: 'rdfjsSource', value: store }],
     });
     result.bindingsStream.on('data', data => {
-      console.log(data.get('?s').id, data.get('?p').id, data.get('?o').id);
+      console.log(data.get('?s').value, data.get('?p').value, data.get('?o').value);
     });
     result.bindingsStream.on('end', data => {
       console.log(`on('end',`, data);
