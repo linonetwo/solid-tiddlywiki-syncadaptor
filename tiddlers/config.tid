@@ -4,28 +4,23 @@ tags: [[$:/tags/ControlPanel/Saving]]
 
 \define lingo-base() $:/language/ControlPanel/Saving/SoLiD/Config
 
-\define wikiRootURI() https://$(userName)$.$(IDPHost)$/$(rootFolder)$
+<div class="solid-card">
 
-\define wikiRootLink()
-  <$set name="userName" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName}}>
-  <$set name="IDPHost" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName}}>
-  <$set name="rootFolder" value={{$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder}}>
-    <<wikiRootURI>>
-  </$set>
-  </$set>
-  </$set>
-\end
+|<<lingo Field>>|<<lingo Value>>|
+|<<lingo IndexFiles>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles" tag="textarea" default="" />|
+|<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles" text=""><<lingo Example>> /public/tiddlywiki/main.ttl</$reveal>|<<lingo IndexFilesDescription>>|
 
-|<<lingo Field>>|<<lingo Value>>|<<lingo Description>>|
-|<<lingo RootFolder>>| <$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" tag="input" default="" /> |<<lingo RootFolderDescription>>|
-||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" text=""><<lingo Example>> public/tiddly</$reveal>|
+</div>
 
-<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName">
-<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName">
-<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder">
-  <<lingo YourSyncingLocation>> <<wikiRootLink>>
-</$reveal>
-</$reveal>
+<$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
+  <div class="solid-card">
+    <<lingo CurrentWebID>> {{$:/status/UserName}}
+    <<lingo CurrentWebIDDescription>>
+  </div>
+  <$button class="solid-button" style="margin-top: 15px" >
+    <$action-sendmessage $message="tm-logout"/>
+    <<lingo Logout>>
+  </$button>
 </$reveal>
 
 <$reveal type="nomatch" text="yes" state="$:/status/IsLoggedIn">
@@ -35,9 +30,3 @@ tags: [[$:/tags/ControlPanel/Saving]]
   </$button>
 </$reveal>
 
-<$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
-  <$button class="solid-button" >
-    <$action-sendmessage $message="tm-logout"/>
-    <<lingo Logout>>
-  </$button>
-</$reveal>

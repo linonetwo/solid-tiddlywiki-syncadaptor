@@ -35,3 +35,34 @@ type: text/css
   color: white;
   background-color: #7c4dff;
 }
+
+.solid-card {
+  display: flex;
+	border-radius: 4px;
+	box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+  align-items: center;
+  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1em 0;
+  border: none);
+  transition: all .25s ease-in-out;
+  width: 100%;
+}
+
+.solid-input {
+  appearance: none;
+  border: 1px solid #01C9EA;
+  background: none;
+  font-size: .8em;
+  padding: .5em 0;
+  text-indent: .5em;
+  border-radius: 4px;
+  width: 100%;
+  outline: none;
+  transition: all 0.25s ease-in-out;
+}
+.solid-textarea {
+  min-height: 2em;
+  text-indent: 0;
+}
