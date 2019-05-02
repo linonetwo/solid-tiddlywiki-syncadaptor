@@ -30,7 +30,8 @@
   },
   "homepage": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#readme",
   "dependencies": {
-    "solid-auth-client": "^2.3.0"
+    "solid-auth-client": "^2.3.0",
+    "stable-sha1": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",

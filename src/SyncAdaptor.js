@@ -1,5 +1,6 @@
 // @flow
 import solidAuthClient from 'solid-auth-client';
+import sha1 from 'stable-sha1';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -18,8 +19,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param tiddler Target tiddler
    */
   getTiddlerInfo(tiddler: Tiddler) {
-    // console.log('getTiddlerInfo', tiddler.fields.title);
-
+    console.log('getTiddlerInfo', tiddler.fields.title);
     return {};
   }
 
@@ -29,10 +29,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {(err,isLoggedIn,username) => void} callback
    */
   getStatus(callback: (error?: Error, isLoggedIn: boolean, username?: string) => void) {
-    // try access index file, if no then create one. This operation's success means login's success
     solidAuthClient.trackSession(session => {
-      console.log('getStatus', session);
-
       if (!session) {
         // The user is not logged in
         callback(undefined, false);
@@ -50,7 +47,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const popupUri = 'https://solid.community/common/popup.html';
     if (!session) {
       session = await solidAuthClient.popupLogin({ popupUri });
-      (session: SoLiDSession)
+      (session: SoLiDSession);
     }
     console.log('login2', session);
     $tw.rootWidget.dispatchEvent({ type: 'tm-server-refresh' });
@@ -68,7 +65,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * get called here https://github.com/Jermolene/TiddlyWiki5/blob/07198b9cda12da82fc66dcf0589d6a9caab1cdf6/core/modules/syncer.js#L208
    */
   getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
-    // console.log('getSkinnyTiddlers');
+    console.log('getSkinnyTiddlers');
+    // create a index for tiddlywiki on the POD if we don't have one
 
     callback(undefined, []);
   }
@@ -82,10 +80,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
   saveTiddler(
     tiddler: Tiddler,
     callback: (error?: Error, adaptorInfo: Object, revision: string) => void,
-    tiddlerInfo: Object,
+    // tiddlerInfo: Object,
   ) {
     // update file located at tiddler.fields.title
-    // console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields));
+    console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
+    callback(undefined, {}, sha1(tiddler.fields));
   }
 
   /** Loads a tiddler from the server, with its text field
