@@ -29,14 +29,14 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 
 <$reveal type="nomatch" text="yes" state="$:/status/IsLoggedIn">
-  <$button>
+  <$button class="solid-filled-button" >
     <$action-sendmessage $message="tm-login-solid"/>
     <<lingo Login>>
   </$button>
 </$reveal>
 
 <$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
-  <$button>
+  <$button class="solid-button" >
     <$action-sendmessage $message="tm-logout"/>
     <<lingo Logout>>
   </$button>

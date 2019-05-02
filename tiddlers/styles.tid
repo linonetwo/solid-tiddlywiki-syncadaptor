@@ -1,0 +1,32 @@
+title: $:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/styles
+tags: [[$:/tags/Stylesheet]]
+type: text/css
+
+.solid-filled-button {
+  padding: 0.5em 4em;
+  width: 100%;
+
+  cursor: pointer;
+  color: white;
+  background-color: #7c4dff;
+  border: 1px solid #7c4dff;
+  border-radius: 4px;
+}
+.solid-filled-button:hover {
+  opacity: 0.7;
+}
+
+.solid-button {
+  padding: 0.5em 4em;
+  width: 100%;
+
+  cursor: pointer;
+  color: #7c4dff;
+  border: 1px solid #7c4dff;
+  background-color: transparent;
+  border-radius: 4px;
+}
+.solid-button:hover {
+  color: white;
+  background-color: #7c4dff;
+}
