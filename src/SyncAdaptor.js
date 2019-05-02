@@ -2,6 +2,8 @@
 import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
+import { newEngine } from '@comunica/actor-init-sparql-rdfjs';
+import { Store, Parser } from 'n3';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -65,10 +67,26 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * This method is optional. If an adaptor doesn't implement it then synchronisation will be unidirectional from the TiddlyWiki store to the adaptor, but not the other way.
    * get called here https://github.com/Jermolene/TiddlyWiki5/blob/07198b9cda12da82fc66dcf0589d6a9caab1cdf6/core/modules/syncer.js#L208
    */
-  getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
+  async getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
     console.log('getSkinnyTiddlers');
-    // create a index for tiddlywiki on the POD if we don't have one
-    this.getTWIndexFileOnPOD();
+    // this will create a index for tiddlywiki on the POD if we don't have one
+    // and return turtle files describing all tiddlers' metadata
+    const indexTtlFiles = await this.getTWIndexFilesOnPOD();
+
+    const parser = new Parser({ format: 'Turtle' });
+    const parsedRdfQuads = indexTtlFiles.map(ttlFile => parser.parse(ttlFile));
+    const store = new Store();
+    parsedRdfQuads.forEach(quads => store.addQuads(quads))
+    const queryEngine = newEngine();
+    const result = await queryEngine.query('SELECT * { ?s ?p ?o }', {
+      sources: [{ type: 'rdfjsSource', value: store }],
+    });
+    result.bindingsStream.on('data', data => {
+      console.log(data.get('?s').id, data.get('?p').id, data.get('?o').id);
+    });
+    result.bindingsStream.on('end', data => {
+      console.log(`on('end',`, data);
+    });
 
     callback(undefined, []);
   }
@@ -109,24 +127,26 @@ class SoLiDTiddlyWikiSyncAdaptor {
     // console.log('deleteTiddler', title);
   }
 
-  /** Scan index files, create if no exists */
-  async getTWIndexFileOnPOD() {
+  /** Scan index files, return the content, create if no exists */
+  async getTWIndexFilesOnPOD(): Promise<string[]> {
     const session: SoLiDSession | null = await solidAuthClient.currentSession();
     const currentWebIDString: ?string = session?.webId;
     const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles');
 
     // guards
     if (!currentWebIDString) {
-      throw new Error('SOLID000 getTWIndexFileOnPOD() get called without login, abort login()');
+      throw new Error('SOLID000 getTWIndexFilesOnPOD() get called without login, abort login()');
     }
     if (!indexFilesString) {
-      throw new Error('SOLID001 getTWIndexFileOnPOD() get called while IndexFiles textarea is unfilled, abort login()');
+      throw new Error(
+        'SOLID001 getTWIndexFilesOnPOD() get called while IndexFiles textarea is unfilled, abort login()',
+      );
     }
     let currentWebIDURL;
     try {
       currentWebIDURL = new URL(currentWebIDString);
     } catch (error) {
-      throw new Error(`SOLID002 getTWIndexFileOnPOD() receives bad WebID ${currentWebIDString}`);
+      throw new Error(`SOLID002 getTWIndexFilesOnPOD() receives bad WebID ${currentWebIDString}`);
     }
 
     const indexFiles: Array<string> = indexFilesString.split('\n');
@@ -141,7 +161,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       )
     ) {
       throw new Error(
-        `SOLID003 getTWIndexFileOnPOD() get called, but some IndexFiles is invalid ${JSON.stringify(
+        `SOLID003 getTWIndexFilesOnPOD() get called, but some IndexFiles is invalid ${JSON.stringify(
           indexFiles,
           null,
           '  ',
@@ -173,6 +193,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
           return SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(itemToCreate.uri);
         }),
     );
+
+    return fileContents.filter(item => item.status === 200).map(item => item.text);
   }
 
   /**
