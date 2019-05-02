@@ -54,6 +54,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       (session: SoLiDSession);
     }
     console.log('login2', session);
+    // https://github.com/Jermolene/TiddlyWiki5/issues/3937
     $tw.rootWidget.dispatchEvent({ type: 'tm-server-refresh' });
   }
 

@@ -8,7 +8,7 @@ Another attempt to make tiddlywiki a frontend for SoLiD Server.
 
 [SoLiD](https://solid.mit.edu/) is a proposed set of conventions and tools for building decentralized social applications based on Linked Data principles.
 
-SoLiD POD (Person Owned Data) is a great place to store TiddlyWiki Tiddlers (executable Note with metadata). By using this [Syncadaptor](https://tiddlywiki.com/dev/#Syncadaptor), you can sync TiddlyWiki data between mobile phone and computer, enable partial wiki sharing (sharing only a part of your wiki), collaborating (by allowing your friends write to your SoLiD POD).
+SoLiD POD (Person Owned Data) is a great place to store TiddlyWiki Tiddlers (executable Note with metadata). By using this [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), you can sync TiddlyWiki data between mobile phone and computer, enable partial wiki sharing (sharing only a part of your wiki), collaborating (by allowing your friends write to your SoLiD POD).
 
 ## Files stored on the POD
 
@@ -28,7 +28,7 @@ You can set a tiddler belongs to a container use `solid-sync` tiddler field, for
 
 ### Data structure
 
-This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [Syncadaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend).
+This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend).
 
 ### Please set a location to store tiddler before you login
 
@@ -55,6 +55,46 @@ See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github
 Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3).
 
 Collaborating should consider diff and conflict.
+
+## Development
+
+### `npm run start`
+
+Will init a local tiddler wiki and copy all tiddlers to the `plugins` folder inside that wiki, and compile JS code, copy JS bundle to the `plugins` folder.
+
+### `npm run dev`
+
+Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS file. A reload of wiki server is needed to serve the new JS bundle.
+
+### References
+
+#### [comunica](https://github.com/comunica/comunica)
+
+[how to use comunica bindingsStream](https://github.com/comunica/comunica/issues/445)
+
+#### TiddlyWiki
+
+Some APIs are in [https://tiddlywiki.com/](tiddlywiki.com) and some are in [tiddlywiki.com/dev/](https://tiddlywiki.com/dev/).
+
+General discussions are in [tiddlywiki google groups](https://groups.google.com/forum/#!forum/tiddlywiki) and [discord](https://discord.gg/tYzK9eC).
+
+Advanced topics can be asked in [tiddlywiki dev google groups](https://groups.google.com/forum/#!forum/tiddlywikidev).
+
+#### Other SyncAdaptor
+
+[TiddlyWebAdaptor](https://github.com/Jermolene/TiddlyWiki5/blob/c05c0d3df66e587f35c5cd3eedcac432b1eed012/plugins/tiddlywiki/tiddlyweb/tiddlywebadaptor.js)
+
+[syncer.js that calls this SyncAdaptor](https://github.com/Jermolene/TiddlyWiki5/blob/master/core/modules/syncer.js)
+
+[possible custom data from SyncAdaptor](https://github.com/Jermolene/TiddlyWiki5/issues/3938)
+
+#### File manipulation on SoLiD POD
+
+[jeff-zucker/solid-file-client/blob/master/src/index.js](https://github.com/jeff-zucker/solid-file-client/blob/master/src/index.js)
+
+#### SoLiD Design Style Guide from Inrupt
+
+[design.inrupt.com](https://design.inrupt.com/atomic-core/)
 
 ## Acknowledgements
 
