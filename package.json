@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#readme",
   "dependencies": {
+    "path-browserify": "^1.0.0",
     "solid-auth-client": "^2.3.0",
     "stable-sha1": "^1.0.1"
   },

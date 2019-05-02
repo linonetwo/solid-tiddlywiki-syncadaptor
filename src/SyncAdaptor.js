@@ -1,6 +1,7 @@
 // @flow
 import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
+import { dirname, basename } from 'path-browserify';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -67,6 +68,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
     console.log('getSkinnyTiddlers');
     // create a index for tiddlywiki on the POD if we don't have one
+    this.getTWIndexFileOnPOD();
 
     callback(undefined, []);
   }
@@ -105,6 +107,116 @@ class SoLiDTiddlyWikiSyncAdaptor {
   deleteTiddler(title: string, callback: (error?: Error) => void, tiddlerInfo: Object) {
     // delete file located at title, title itself is a path
     // console.log('deleteTiddler', title);
+  }
+
+  /** Scan index files, create if no exists */
+  async getTWIndexFileOnPOD() {
+    const session: SoLiDSession | null = await solidAuthClient.currentSession();
+    const currentWebIDString: ?string = session?.webId;
+    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles');
+
+    // guards
+    if (!currentWebIDString) {
+      throw new Error('SOLID000 getTWIndexFileOnPOD() get called without login, abort login()');
+    }
+    if (!indexFilesString) {
+      throw new Error('SOLID001 getTWIndexFileOnPOD() get called while IndexFiles textarea is unfilled, abort login()');
+    }
+    let currentWebIDURL;
+    try {
+      currentWebIDURL = new URL(currentWebIDString);
+    } catch (error) {
+      throw new Error(`SOLID002 getTWIndexFileOnPOD() receives bad WebID ${currentWebIDString}`);
+    }
+
+    const indexFiles: Array<string> = indexFilesString.split('\n');
+    // currently Node Solid Server supports following root location
+    if (
+      !indexFiles.every(
+        path =>
+          path.startsWith('/public') ||
+          path.startsWith('/private') ||
+          path.startsWith('/inbox') ||
+          path.startsWith('/profile'),
+      )
+    ) {
+      throw new Error(
+        `SOLID003 getTWIndexFileOnPOD() get called, but some IndexFiles is invalid ${JSON.stringify(
+          indexFiles,
+          null,
+          '  ',
+        )}`,
+      );
+    }
+
+    // try access files
+    const podUrl = `${currentWebIDURL.protocol}//${currentWebIDURL.hostname}`;
+    const fileURIs = indexFiles.map(path => `${podUrl}${path}`);
+    const fileContents = await Promise.all(
+      fileURIs.map(uri =>
+        solidAuthClient
+          .fetch(uri)
+          .then(async (res: Response) => {
+            // might be 401 for /private , 403 for ACL blocking , 404 for uncreated, 200 for good
+            return { status: res.status, uri, text: await res.text() };
+          })
+          .catch(error => {
+            console.error(uri, error);
+          }),
+      ),
+    );
+    console.log('fileContents', fileContents);
+    await Promise.all(
+      fileContents
+        .filter(item => item.status === 404)
+        .map(itemToCreate => {
+          return SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(itemToCreate.uri);
+        }),
+    );
+  }
+
+  /**
+   * Recursively create parent folder then the file itself
+   * This function only creates turtle file ends with .ttl
+   * Or folder ends without slash
+   * @param {string} uri the file or folder uri to be created
+   */
+  static async createFileOrFolder(url: string, folder?: boolean = false) {
+    // first check if folder exists, so we can put this file inside
+    const urlObj = new URL(url);
+    const pathName = urlObj.pathname;
+    const hostName = urlObj.hostname;
+    const fileOrFolderNameToCreate = basename(url, '.ttl');
+    const parentFolder = dirname(pathName);
+    const parentUrl = `https://${hostName}${parentFolder}`;
+    if (parentFolder !== '/') {
+      const parentFolderResponse: Response = await solidAuthClient.fetch(parentUrl);
+      if (parentFolderResponse.status === 404) {
+        await SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(parentUrl, true);
+      }
+    }
+    // parent folder now exists, create the thing itself
+    const link = folder
+      ? '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'
+      : '<http://www.w3.org/ns/ldp#Resource>; rel="type"';
+    const contentType = 'text/turtle';
+    const init = {
+      method: 'POST',
+      headers: { slug: fileOrFolderNameToCreate, link, 'Content-Type': contentType },
+      body: '',
+    };
+    try {
+      // let parent folder create a resource named ${slug}
+      const creationResponse: Response = await solidAuthClient.fetch(parentUrl, init);
+      // check it's 201 Created
+      if (creationResponse.status !== 201) {
+        throw new Error(`${creationResponse.status}, ${creationResponse.statusText}`);
+      }
+    } catch (error) {
+      throw new Error(
+        `SOLID004 createFileOrFolder() creating ${fileOrFolderNameToCreate} on ${parentUrl} failed with ${error}`,
+      );
+    }
   }
 }
 
@@ -152,6 +264,7 @@ type Wiki = {
   addTiddler: Function,
   deleteTiddler: Function,
   getTiddler: Function,
+  getTiddlerText: string => ?string,
   allTitles: Function,
   each: Function,
   allShadowTitles: Function,
