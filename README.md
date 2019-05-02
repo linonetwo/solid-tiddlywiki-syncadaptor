@@ -20,7 +20,11 @@ you can add more than one index files in the `$:/ControlPanel/Saving`, each in a
 /private/tiddlywiki/main/shareWithGirlFriend.ttl
 ```
 
+#### Share with certain friends
+
 Index file on `/private` folder is invisible to anyone not in your Web Access Control List File, normally this ACL file is located in `/private/tiddlywiki/main/index.ttl.acl` (?). You can change it using other SoLiD Apps.
+
+#### Set a tiddler private
 
 You can set a tiddler belongs to an index file use `solid-index-file` tiddler field, for example, `solid-index-file: /private/tiddlywiki/main/index.ttl`. If this tiddler field is unset, this sync adaptor will assign the first one in the `$:/ControlPanel/Saving`'s IndexFiles field to it.
 
