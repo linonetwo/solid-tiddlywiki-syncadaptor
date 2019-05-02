@@ -20,6 +20,8 @@ you can add more than one index files in the `$:/ControlPanel/Saving`, each in a
 /private/tiddlywiki/main/shareWithGirlFriend.ttl
 ```
 
+Note that this config field is located in `$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles` and will also be sync to your POD, it's better to set this file public for convenience.
+
 #### Share with certain friends
 
 Index file on `/private` folder is invisible to anyone not in your Web Access Control List File, normally this ACL file is located in `/private/tiddlywiki/main/index.ttl.acl` (?). You can change it using other SoLiD Apps.
