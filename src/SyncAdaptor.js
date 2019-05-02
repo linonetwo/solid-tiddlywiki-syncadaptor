@@ -1,12 +1,15 @@
 // @flow
 import solidAuthClient from 'solid-auth-client';
 
+import { type SoLiDSession } from './SoLiDSessionType';
+
 class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
 
   constructor(options: { wiki: Wiki }) {
     this.wiki = options.wiki;
-    // console.log('constructor');
+    console.log('constructor');
+    $tw.rootWidget.addEventListener('tm-login-solid', this.login);
   }
 
   /**
@@ -28,24 +31,35 @@ class SoLiDTiddlyWikiSyncAdaptor {
   getStatus(callback: (error?: Error, isLoggedIn: boolean, username?: string) => void) {
     // try access index file, if no then create one. This operation's success means login's success
     solidAuthClient.trackSession(session => {
+      console.log('getStatus', session);
+
       if (!session) {
         // The user is not logged in
-        callback(undefined, true, session.webId);
+        callback(undefined, false);
       } else {
         // `The user is ${session.webId}`
-        callback(undefined, false);
+        callback(undefined, true, session.webId);
       }
     });
   }
 
   /** Attempts to login to the server with specified credentials. This method is optional. */
-  login(username: string, password: string, callback: Function) {
-    console.log('login');
+  async login() {
+    console.log('login1');
+    let session = await solidAuthClient.currentSession();
+    const popupUri = 'https://solid.community/common/popup.html';
+    if (!session) {
+      session = await solidAuthClient.popupLogin({ popupUri });
+      (session: SoLiDSession)
+    }
+    console.log('login2', session);
+    $tw.rootWidget.dispatchEvent({ type: 'tm-server-refresh' });
   }
 
   /** Attempts to logout of the server. This method is optional. */
   logout(callback: Function) {
-    // console.log('logout');
+    console.log('logout');
+    solidAuthClient.logout().then(callback);
   }
 
   /**

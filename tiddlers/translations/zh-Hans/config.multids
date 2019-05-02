@@ -11,8 +11,7 @@ RootFolder: 存储位置
 RootFolderDescription: 在 SoLiD POD 上存放文件的位置
 UserName: 用户名
 UserNameDescription: 你在 SoLiD 上通过 OIDC 用户名密码登录时输入的用户名
-Password: 密码
-PasswordDescription: 与上述用户名相对应的密码
 YourSyncingLocation: 你的 TiddlyWiki 将会与这个地址下的文件保持同步
 
 Login: 登录
+Logout: 登出

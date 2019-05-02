@@ -17,13 +17,8 @@ tags: [[$:/tags/ControlPanel/Saving]]
 \end
 
 |<<lingo Field>>|<<lingo Value>>|<<lingo Description>>|
-|<<lingo IDPHostName>>|<$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName" default="" tag="input"/> |<<lingo IDPHostNameDescription>>|
-||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName" text=""><<lingo Example>> solid.inrupt.com</$reveal>|
 |<<lingo RootFolder>>| <$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" tag="input" default="" /> |<<lingo RootFolderDescription>>|
 ||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/RootFolder" text=""><<lingo Example>> public/tiddly</$reveal>|
-|<<lingo UserName>>|<$edit-text tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName" default="" tag="input"/> |<<lingo UserNameDescription>>|
-||<$reveal type="match" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName" text=""><<lingo Example>> timbl</$reveal>|
-|<<lingo Password>>|<$password name="solid-tiddlywiki-syncadaptor"/> |<<lingo PasswordDescription>>|
 
 <$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName">
 <$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IDPHostName">
@@ -33,9 +28,16 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 </$reveal>
 
-<$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/UserName">
+<$reveal type="nomatch" text="yes" state="$:/status/IsLoggedIn">
   <$button>
-    <$action-sendmessage $message="tm-login"/>
+    <$action-sendmessage $message="tm-login-solid"/>
     <<lingo Login>>
+  </$button>
+</$reveal>
+
+<$reveal type="match" text="yes" state="$:/status/IsLoggedIn">
+  <$button>
+    <$action-sendmessage $message="tm-logout"/>
+    <<lingo Logout>>
   </$button>
 </$reveal>
