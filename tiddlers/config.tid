@@ -24,9 +24,16 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 
 <$reveal type="nomatch" text="yes" state="$:/status/IsLoggedIn">
-  <$button class="solid-filled-button" >
-    <$action-sendmessage $message="tm-login-solid"/>
-    <<lingo Login>>
-  </$button>
+  <$reveal type="nomatch" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+    <$button class="solid-filled-button" >
+      <$action-sendmessage $message="tm-login-solid"/>
+      <<lingo Login>>
+    </$button>
+  </$reveal>
+  <$reveal type="match" text="" state="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles">
+    <$button class="solid-button-disabled" >
+      <<lingo CantLogin>>
+    </$button>
+  </$reveal>
 </$reveal>
 

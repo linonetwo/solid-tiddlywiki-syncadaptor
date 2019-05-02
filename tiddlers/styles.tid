@@ -36,6 +36,20 @@ type: text/css
   background-color: #7c4dff;
 }
 
+.solid-button-disabled {
+  padding: 0.5em 4em;
+  width: 100%;
+
+  cursor: not-allowed;
+  color: #354866;
+  background-color: #DAE0E6;
+  border: 1px solid #DAE0E6;
+  border-radius: 4px;
+  font-size: .8em;
+  transition: 0.25s all ease-in-out;
+  outline: none;
+}
+
 .solid-card {
   display: flex;
 	border-radius: 4px;

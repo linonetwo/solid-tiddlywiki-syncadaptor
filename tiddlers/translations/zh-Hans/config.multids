@@ -11,4 +11,5 @@ CurrentWebID: 当前登录的 web id ：
 CurrentWebIDDescription: 若网络情况良好，tiddly wiki 就能与这个 web id 麾下的存储保持同步
 
 Login: 打开登录窗口
+CantLogin: 填写「文件列表存储位置」后才能登录
 Logout: 登出
