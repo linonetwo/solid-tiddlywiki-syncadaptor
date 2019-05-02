@@ -22,6 +22,12 @@ you can add more than one index files in the `$:/ControlPanel/Saving`, each in a
 
 Note that this config field is located in `$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/IndexFiles` and will also be sync to your POD, it's better to set this file public for convenience.
 
+#### Can not access private resources
+
+See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github.com/solid/node-solid-server#upgrading-from-version-4)
+
+> starting from version 5, third-party apps are untrusted by default. To trust a third-party app, before you can log in to it, you first need to go to your profile at example.com/profile/card#me (important to include the ‘#me’ there), and then hover over the ‘card’ header to reveal the context menu. From there, select the ‘A’ symbol to go to your trusted applications pane, where you can whitelist third-party apps before using them. See also solid/node-solid-server/issues/1142 about streamlining this UX flow.
+
 #### Share with certain friends
 
 Index file on `/private` folder is invisible to anyone not in your Web Access Control List File, normally this ACL file is located in `/private/tiddlywiki/main/index.ttl.acl` (?). You can change it using other SoLiD Apps.
