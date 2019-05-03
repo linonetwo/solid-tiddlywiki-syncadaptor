@@ -23,8 +23,14 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param tiddler Target tiddler
    */
   getTiddlerInfo(tiddler: Tiddler) {
-    console.log('getTiddlerInfo', tiddler.fields.title);
-    return {};
+    console.log(
+      'getTiddlerInfo',
+      tiddler.fields.title,
+      this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid),
+    );
+    return {
+      solid: this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid).containerPath,
+    };
   }
 
   /**
@@ -73,15 +79,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
     console.log('getSkinnyTiddlers');
     // this will create a index for tiddlywiki on the POD if we don't have one
     // and return turtle files describing all tiddlers' metadata
-    const indexTtlFiles = await this.getTWContainersOnPOD();
 
-    const parser = new Parser({ format: 'Turtle' });
-    const parsedRdfQuads = indexTtlFiles.map(ttlFile => parser.parse(ttlFile));
-    const store = new Store();
-    parsedRdfQuads.forEach(quads => store.addQuads(quads));
+    this.updateIndexStore();
     const queryEngine = newEngine();
     const result = await queryEngine.query('SELECT * { ?s ?p ?o }', {
-      sources: [{ type: 'rdfjsSource', value: store }],
+      sources: [{ type: 'rdfjsSource', value: this.store }],
     });
     result.bindingsStream.on('data', data => {
       console.log(data.get('?s').value, data.get('?p').value, data.get('?o').value);
@@ -99,24 +101,50 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {(err,adaptorInfo,revision) => void} callback
    * @param {Object} tiddlerInfo The tiddlerInfo maintained by the syncer.getTiddlerInfo() for this tiddler
    */
-  saveTiddler(
+  async saveTiddler(
     tiddler: Tiddler,
     callback: (error?: Error, adaptorInfo: Object, revision: string) => void,
     // tiddlerInfo: Object,
   ) {
     // update file located at tiddler.fields.title
-    console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
-    callback(undefined, {}, sha1(tiddler.fields));
+    const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
+    try {
+      // delete and recreate
+      await solidAuthClient.fetch(fileLocation, { method: 'DELETE' });
+      // recreate
+      // TODO: make it jsonld to turtle
+      const content = JSON.stringify(tiddler, null, '  ');
+      const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
+      this.createFileOrFolder(fileLocation, contentType, content);
+      console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
+      callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
+    } catch (error) {
+      callback(error, { solid: containerPath }, sha1(tiddler.fields));
+      throw new Error(`SOLID005 saveTiddler() ${error}`);
+    }
   }
 
   /** Loads a tiddler from the server, with its text field
    * @param {string} title Title of tiddler to be retrieved
    * @param {(err,tiddlerFields) => void} callback See https://tiddlywiki.com/#TiddlerFields
    */
-  loadTiddler(title: string, callback: (error?: Error, tiddlerFields: Tiddler) => void) {
-    // console.log('loadTiddler', title);
-
-    callback(undefined, {});
+  async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: Tiddler) => void) {
+    console.log('loadTiddler', title);
+    const podUrl = await this.getPodUrl();
+    const result = await Promise.all(
+      this.getTWContainersList().map(path => {
+        const { fileLocation } = this.getTiddlerContainerPath(title, path);
+        return solidAuthClient
+          .fetch(`${podUrl}/${fileLocation}`)
+          .then((res: Response) => (res.status === 200 ? res.text() : null));
+      }),
+    );
+    if (result.length > 0) {
+      // TODO: turtle to jsonLD
+      callback(undefined, {});
+    } else {
+      callback(new Error('loadTiddler() no found in all Container Path'));
+    }
   }
 
   /** Delete a tiddler from the server.
@@ -124,37 +152,73 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {Function} callback Callback function invoked with parameter err
    * @param {Object} tiddlerInfo The tiddlerInfo maintained by the syncer.getTiddlerInfo() for this tiddler
    */
-  deleteTiddler(title: string, callback: (error?: Error) => void, tiddlerInfo: Object) {
+  async deleteTiddler(title: string, callback: (error?: Error) => void, tiddlerInfo: Object) {
     // delete file located at title, title itself is a path
-    // console.log('deleteTiddler', title);
+    console.log('deleteTiddler', title);
+    const { fileLocation } = this.getTiddlerContainerPath(title, tiddlerInfo.solid);
+    try {
+      // delete and recreate
+      await solidAuthClient.fetch(fileLocation, { method: 'DELETE' });
+      callback(undefined);
+    } catch (error) {
+      callback(error);
+      throw new Error(`SOLID006 deleteTiddler() ${error}`);
+    }
   }
 
-  /** Scan index files, return the content, create if no exists */
-  async getTWContainersOnPOD(): Promise<string[]> {
-    const session: SoLiDSession | null = await solidAuthClient.currentSession();
-    const currentWebIDString: ?string = session?.webId;
-    const indexFilesString = this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers');
+  // ____  ____  ________  _____     _______  ________  _______     
+  // |_   ||   _||_   __  ||_   _|   |_   __ \|_   __  ||_   __ \    
+  //   | |__| |    | |_ \_|  | |       | |__) | | |_ \_|  | |__) |   
+  //   |  __  |    |  _| _   | |   _   |  ___/  |  _| _   |  __ /    
+  //  _| |  | |_  _| |__/ | _| |__/ | _| |_    _| |__/ | _| |  \ \_  
+  // |____||____||________||________||_____|  |________||____| |___| 
 
-    // guards
-    if (!currentWebIDString) {
-      throw new Error('SOLID000 getTWContainersOnPOD() get called without login, abort login()');
-    }
-    if (!indexFilesString) {
-      throw new Error(
-        'SOLID001 getTWContainersOnPOD() get called while Containers textarea is unfilled, abort login()',
-      );
-    }
-    let currentWebIDURL;
-    try {
-      currentWebIDURL = new URL(currentWebIDString);
-    } catch (error) {
-      throw new Error(`SOLID002 getTWContainersOnPOD() receives bad WebID ${currentWebIDString}`);
-    }
 
-    const indexFiles: Array<string> = compact(indexFilesString.split('\n'));
+  store = new Store();
+
+  /** load containers turtle files and clear the store then add them to store */
+  async updateIndexStore() {
+    const containerTtlFiles = await this.getTWContainersOnPOD();
+
+    this.store = new Store();
+    // const session: SoLiDSession = await solidAuthClient.currentSession();
+    const parsedRdfQuads = containerTtlFiles.map(({ uri, text }) => {
+      const parser = new Parser({ format: 'Turtle', baseIRI: uri });
+      return parser.parse(text);
+    });
+    parsedRdfQuads.forEach(quads => this.store.addQuads(quads));
+  }
+
+  /** given a tiddler 's title and container path ('solid'), return file full relative path to hostname
+   */
+  getTiddlerContainerPath(title: string, solid?: string) {
+    // assign it with a default container if it doesn't have one
+    let containerPath = solid;
+    if (!containerPath) {
+      [containerPath] = this.getTWContainersList();
+    }
+    const fileLocation = `${containerPath}/${title}`;
+    return { fileLocation, containerPath };
+  }
+
+  /**
+   * get containers list and guard to check it exists
+   * @returns an array with at least one string, or it will throw
+   */
+  getTWContainersList() {
+    const containerPathsString = this.wiki.getTiddlerText(
+      '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers',
+    );
+    if (!containerPathsString) {
+      throw new Error('SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()');
+    }
+    const containerPaths: Array<string> = compact(containerPathsString.split('\n'));
+    if (!containerPaths.length === 0) {
+      throw new Error('SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()');
+    }
     // currently Node Solid Server supports following root location
     if (
-      !indexFiles.every(
+      !containerPaths.every(
         path =>
           path.startsWith('/public') ||
           path.startsWith('/private') ||
@@ -163,16 +227,40 @@ class SoLiDTiddlyWikiSyncAdaptor {
       )
     ) {
       throw new Error(
-        `SOLID003 getTWContainersOnPOD() get called, but some Containers is invalid ${JSON.stringify(
-          indexFiles,
+        `SOLID001 getTWContainersList() get called, but some Containers is invalid ${JSON.stringify(
+          containerPaths,
           null,
           '  ',
         )}`,
       );
     }
+    return containerPaths;
+  }
+
+  async getPodUrl() {
+    const session: SoLiDSession | null = await solidAuthClient.currentSession();
+    const currentWebIDString: ?string = session?.webId;
+
+    // guards
+    if (!currentWebIDString) {
+      throw new Error('SOLID002 getPodUrl() get called without login, abort login()');
+    }
+    let currentWebIdURL;
+    try {
+      currentWebIdURL = new URL(currentWebIDString);
+    } catch (error) {
+      throw new Error(`SOLID003 getPodUrl() receives bad WebID ${currentWebIDString}`);
+    }
 
     // try access files
-    const podUrl = `${currentWebIDURL.protocol}//${currentWebIDURL.hostname}`;
+    const podUrl = `${currentWebIdURL.protocol}//${currentWebIdURL.hostname}`;
+    return podUrl;
+  }
+
+  /** Scan index files, return the content, create if no exists */
+  async getTWContainersOnPOD(): Promise<{ uri: string, text: string }[]> {
+    const podUrl = await this.getPodUrl();
+    const indexFiles = this.getTWContainersList();
     const fileURIs = indexFiles.map(path => `${podUrl}${path}`);
     const fileContents = await Promise.all(
       fileURIs.map(uri =>
@@ -192,12 +280,14 @@ class SoLiDTiddlyWikiSyncAdaptor {
       fileContents
         .filter(item => item.status === 404)
         .map(itemToCreate => {
-          return SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(itemToCreate.uri, true);
+          return this.createFileOrFolder(itemToCreate.uri, 'text/turtle', true);
         }),
     );
 
-    return fileContents.filter(item => item.status === 200).map(item => item.text);
+    return fileContents.filter(item => item.status === 200);
   }
+
+  folderSymbol = Symbol('folder');
 
   /**
    * Recursively create parent folder then the file itself
@@ -205,29 +295,33 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * Or folder ends without slash
    * @param {string} uri the file or folder uri to be created
    */
-  static async createFileOrFolder(url: string, folder?: boolean = false) {
+  async createFileOrFolder(
+    url: string,
+    contentType: string = 'text/turtle',
+    content: Symbol | string = this.folderSymbol,
+  ) {
     // first check if folder exists, so we can put this file inside
     const urlObj = new URL(url);
     const pathName = urlObj.pathname;
     const hostName = urlObj.hostname;
-    const fileOrFolderNameToCreate = basename(url, '.ttl');
+    const fileOrFolderNameToCreate = basename(url);
     const parentFolder = dirname(pathName);
     const parentUrl = `https://${hostName}${parentFolder}`;
     if (parentFolder !== '/') {
       const parentFolderResponse: Response = await solidAuthClient.fetch(parentUrl);
       if (parentFolderResponse.status === 404) {
-        await SoLiDTiddlyWikiSyncAdaptor.createFileOrFolder(parentUrl, true);
+        await this.createFileOrFolder(parentUrl);
       }
     }
     // parent folder now exists, create the thing itself
-    const link = folder
-      ? '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'
-      : '<http://www.w3.org/ns/ldp#Resource>; rel="type"';
-    const contentType = 'text/turtle';
+    const link =
+      content === this.folderSymbol
+        ? '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'
+        : '<http://www.w3.org/ns/ldp#Resource>; rel="type"';
     const init = {
       method: 'POST',
       headers: { slug: fileOrFolderNameToCreate, link, 'Content-Type': contentType },
-      body: '',
+      body: content === this.folderSymbol ? '' : content,
     };
     try {
       // let parent folder create a resource named ${slug}
@@ -282,6 +376,8 @@ type TiddlerFields = {
   caption?: string,
   /** used to check whether a tiddler needs update */
   revision?: string,
+  /** our custom field, a URI determine where to store it */
+  solid?: string,
 };
 
 type Wiki = {

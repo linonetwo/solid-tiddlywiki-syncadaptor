@@ -8,6 +8,7 @@
     "@babel/plugin-transform-flow-strip-types",
     "babel-plugin-array-last-index",
     ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-proposal-class-properties", { "loose": true }],
     ["flow-runtime", { "assert": true, "annotate": true, "warn": true }]
   ]
 }
