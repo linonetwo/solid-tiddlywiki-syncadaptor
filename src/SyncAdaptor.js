@@ -109,13 +109,25 @@ class SoLiDTiddlyWikiSyncAdaptor {
     // update file located at tiddler.fields.title
     const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
     try {
+      const podUrl = await this.getPodUrl();
       // delete and recreate
-      await solidAuthClient.fetch(fileLocation, { method: 'DELETE' });
+      console.log('deleting', `${podUrl}${fileLocation}`);
+      await solidAuthClient.fetch(`${podUrl}${fileLocation}`, { method: 'DELETE' });
       // recreate
       // TODO: make it jsonld to turtle
       const content = JSON.stringify(tiddler, null, '  ');
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
-      this.createFileOrFolder(fileLocation, contentType, content);
+      console.log('creating', `${podUrl}${fileLocation}`, contentType, content);
+      await this.createFileOrFolder(`${podUrl}${fileLocation}`, contentType, content);
+      const metadata = `
+@prefix schema: <http://https://schema.org/#>.
+
+<>
+    schema:keywords "SomeTag, AnotherTag".
+`;
+      console.log('creating', `${podUrl}${fileLocation}.meta`, 'text/turtle', metadata);
+
+      await this.createFileOrFolder(`${podUrl}${fileLocation}.meta`, 'text/turtle', metadata);
       console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
     } catch (error) {
@@ -135,12 +147,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       this.getTWContainersList().map(path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         return solidAuthClient
-          .fetch(`${podUrl}/${fileLocation}`)
+          .fetch(`${podUrl}${fileLocation}`)
           .then((res: Response) => (res.status === 200 ? res.text() : null));
       }),
     );
     if (result.length > 0) {
       // TODO: turtle to jsonLD
+      // TODO: .replace('dollar__', '$:');
       callback(undefined, {});
     } else {
       callback(new Error('loadTiddler() no found in all Container Path'));
@@ -166,13 +179,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
     }
   }
 
-  // ____  ____  ________  _____     _______  ________  _______     
-  // |_   ||   _||_   __  ||_   _|   |_   __ \|_   __  ||_   __ \    
-  //   | |__| |    | |_ \_|  | |       | |__) | | |_ \_|  | |__) |   
-  //   |  __  |    |  _| _   | |   _   |  ___/  |  _| _   |  __ /    
-  //  _| |  | |_  _| |__/ | _| |__/ | _| |_    _| |__/ | _| |  \ \_  
-  // |____||____||________||________||_____|  |________||____| |___| 
-
+  // ____  ____  ________  _____     _______  ________  _______
+  // |_   ||   _||_   __  ||_   _|   |_   __ \|_   __  ||_   __ \
+  //   | |__| |    | |_ \_|  | |       | |__) | | |_ \_|  | |__) |
+  //   |  __  |    |  _| _   | |   _   |  ___/  |  _| _   |  __ /
+  //  _| |  | |_  _| |__/ | _| |__/ | _| |_    _| |__/ | _| |  \ \_
+  // |____||____||________||________||_____|  |________||____| |___|
 
   store = new Store();
 
@@ -189,7 +201,9 @@ class SoLiDTiddlyWikiSyncAdaptor {
     parsedRdfQuads.forEach(quads => this.store.addQuads(quads));
   }
 
-  /** given a tiddler 's title and container path ('solid'), return file full relative path to hostname
+  /**
+   * given a tiddler 's title and container path ('solid'), return file full relative path to hostname
+   * will perform title.replace('$:', 'dollar__');
    */
   getTiddlerContainerPath(title: string, solid?: string) {
     // assign it with a default container if it doesn't have one
@@ -197,7 +211,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     if (!containerPath) {
       [containerPath] = this.getTWContainersList();
     }
-    const fileLocation = `${containerPath}/${title}`;
+    const fileLocation = `${containerPath}/${title}`.replace('$:', 'dollar__');
     return { fileLocation, containerPath };
   }
 
