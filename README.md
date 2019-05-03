@@ -68,13 +68,13 @@ Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS f
 
 ### References
 
-#### [comunica](https://github.com/comunica/comunica)
+#### Comunica
 
 [how to use comunica bindingsStream](https://github.com/comunica/comunica/issues/445)
 
 #### TiddlyWiki
 
-Some APIs are in [https://tiddlywiki.com/](tiddlywiki.com) and some are in [tiddlywiki.com/dev/](https://tiddlywiki.com/dev/).
+Some APIs are in [tiddlywiki.com](https://tiddlywiki.com/) and some are in [tiddlywiki.com/dev/](https://tiddlywiki.com/dev/).
 
 General discussions are in [tiddlywiki google groups](https://groups.google.com/forum/#!forum/tiddlywiki) and [discord](https://discord.gg/tYzK9eC).
 
