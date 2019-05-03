@@ -28,7 +28,9 @@ You can set a tiddler belongs to a container use `solid-sync` tiddler field, for
 
 ### Data structure
 
-This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend).
+This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend, with all metadata of those tiddlers, without text of those tiddlers).
+
+Files inside folders contains the `text` field of tiddlers.
 
 ### Please set a location to store tiddler before you login
 
