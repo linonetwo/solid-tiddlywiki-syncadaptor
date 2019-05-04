@@ -123,24 +123,29 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
     try {
       const podUrl = await this.getPodUrl();
+      const fileUrl = `${podUrl}${fileLocation}`;
+      const metaUrl = `${fileUrl}.meta`;
       // delete and recreate
-      console.log('deleting', `${podUrl}${fileLocation}`);
-      await solidAuthClient.fetch(`${podUrl}${fileLocation}`, { method: 'DELETE' });
+      console.log(`deleting ${fileUrl} and ${metaUrl}`);
+      await Promise.all([
+        solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
+        solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
+      ]);
       // recreate
       // TODO: make it jsonld to turtle
       const content = JSON.stringify(tiddler, null, '  ');
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
-      console.log('creating', `${podUrl}${fileLocation}`, contentType, content);
-      await this.createFileOrFolder(`${podUrl}${fileLocation}`, contentType, content);
+      console.log('creating', fileUrl, contentType, content);
+      await this.createFileOrFolder(fileUrl, contentType, content);
       const metadata = `
 @prefix schema: <http://https://schema.org/#>.
 
 <>
     schema:keywords "SomeTag, AnotherTag".
 `;
-      console.log('creating', `${podUrl}${fileLocation}.meta`, 'text/turtle', metadata);
+      console.log('creating', metaUrl, 'text/turtle', metadata);
 
-      await this.createFileOrFolder(`${podUrl}${fileLocation}.meta`, 'text/turtle', metadata);
+      await this.createFileOrFolder(metaUrl, 'text/turtle', metadata);
       console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
     } catch (error) {
