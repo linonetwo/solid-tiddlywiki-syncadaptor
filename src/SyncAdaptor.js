@@ -129,7 +129,9 @@ class SoLiDTiddlyWikiSyncAdaptor {
       console.log(`deleting ${fileUrl} and ${metaUrl}`);
       await Promise.all([
         solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
-        solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
+        solidAuthClient.fetch(metaUrl, { method: 'DELETE' }),
+        // TODO: there should not be `${metaUrl}.ttl`, but currently it just creates it
+        solidAuthClient.fetch(`${metaUrl}.ttl`, { method: 'DELETE' }),
       ]);
       // recreate
       // TODO: make it jsonld to turtle
