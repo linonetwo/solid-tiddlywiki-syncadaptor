@@ -287,10 +287,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
   /** Scan index files, return the content, create if no exists */
   async getTWContainersOnPOD(): Promise<{ uri: string, text: string }[]> {
     const podUrl = await this.getPodUrl();
-    const indexFiles = this.getTWContainersList();
-    const fileURIs = indexFiles.map(path => `${podUrl}${path}`);
-    const fileContents = await Promise.all(
-      fileURIs.map(uri =>
+    const containerPaths = this.getTWContainersList();
+    const containerURIs = containerPaths.map(path => `${podUrl}${path}`);
+    const containerTtlFiles = await Promise.all(
+      containerURIs.map(uri =>
         solidAuthClient
           .fetch(uri)
           .then(async (res: Response) => {
@@ -302,16 +302,16 @@ class SoLiDTiddlyWikiSyncAdaptor {
           }),
       ),
     );
-    console.log('fileContents', fileContents);
+    console.log('containerTtlFiles', containerTtlFiles);
     await Promise.all(
-      fileContents
-        .filter(item => item.status === 404)
-        .map(itemToCreate => {
-          return this.createFileOrFolder(itemToCreate.uri, 'text/turtle', true);
+      containerTtlFiles
+        .filter(containerTtlFile => containerTtlFile.status === 404)
+        .map(containerToCreate => {
+          return this.createFileOrFolder(containerToCreate.uri);
         }),
     );
 
-    return fileContents.filter(item => item.status === 200);
+    return containerTtlFiles.filter(containerTtlFile => containerTtlFile.status === 200);
   }
 
   folderSymbol = Symbol('folder');
@@ -354,6 +354,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // let parent folder create a resource named ${slug}
       const creationResponse: Response = await solidAuthClient.fetch(parentUrl, init);
       // check it's 201 Created
+      if (creationResponse.statusText === 'Origin Unauthorized') {
+        throw new Error(
+          `You need to trust ${
+            typeof window !== 'undefined' ? window.location.origin : ' this app'
+          } in SoLiD Panel. See https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#if-you-can-not-access-private-resources`,
+        );
+      }
       if (creationResponse.status !== 201) {
         throw new Error(`${creationResponse.status}, ${creationResponse.statusText}`);
       }
@@ -366,6 +373,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
 }
 
 // only run this on the browser
+// eslint-disable-next-line
 if ($tw && $tw.browser) exports.adaptorClass = SoLiDTiddlyWikiSyncAdaptor;
 
 declare var $tw: any;

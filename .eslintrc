@@ -8,11 +8,10 @@
   },
   "env": {
     "es6": true,
-    "node": true,
-    "browser": false
+    "node": false,
+    "browser": true
   },
   "globals": {
-    "fetch": true,
     "$tw": true
   },
   "rules": {
