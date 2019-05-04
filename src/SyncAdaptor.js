@@ -52,14 +52,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
   /** Attempts to login to the server with specified credentials. This method is optional. */
   async login() {
-    console.log('login1');
     let session = await solidAuthClient.currentSession();
     const popupUri = 'https://solid.community/common/popup.html';
     if (!session) {
       session = await solidAuthClient.popupLogin({ popupUri });
       (session: SoLiDSession);
     }
-    console.log('login2', session);
     // https://github.com/Jermolene/TiddlyWiki5/issues/3937
     $tw.rootWidget.dispatchEvent({ type: 'tm-server-refresh' });
   }
@@ -76,6 +74,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * get called here https://github.com/Jermolene/TiddlyWiki5/blob/07198b9cda12da82fc66dcf0589d6a9caab1cdf6/core/modules/syncer.js#L208
    */
   async getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
+    const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
+    if (isLoggedIn !== 'yes') {
+      callback(undefined, []);
+      console.warn('cant getSkinnyTiddlers while not logged in');
+      // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
+      return;
+    }
     console.log('getSkinnyTiddlers');
     // this will create a index for tiddlywiki on the POD if we don't have one
     // and return turtle files describing all tiddlers' metadata
@@ -103,9 +108,17 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   async saveTiddler(
     tiddler: Tiddler,
-    callback: (error?: Error, adaptorInfo: Object, revision: string) => void,
+    callback: (error?: Error, adaptorInfo?: Object, revision?: string) => void,
     // tiddlerInfo: Object,
   ) {
+    const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
+    if (isLoggedIn !== 'yes') {
+      // callback(new Error('cant save while not logged in'));
+      console.warn('cant save while not logged in');
+      callback(undefined);
+      // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
+      return;
+    }
     // update file located at tiddler.fields.title
     const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
     try {
