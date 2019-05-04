@@ -58,6 +58,8 @@ Full text search on SoLiD POD is currently impossible, and is [hard on TW](https
 
 Collaborating should consider diff and conflict.
 
+I18N https://groups.google.com/forum/#!topic/tiddlywikidev/9prY0BRCoGo
+
 ## Development
 
 ### `npm run start`
