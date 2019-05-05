@@ -71,6 +71,6 @@
     "rimraf": "2.6.3",
     "tiddlywiki": "5.1.19",
     "webpack": "4.30.0",
-    "webpack-cli": "3.3.1"
+    "webpack-cli": "3.3.2"
   }
 }
