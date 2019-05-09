@@ -142,17 +142,15 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // TODO: make it jsonld to turtle
       const content = JSON.stringify(tiddler, null, '  ');
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
-      console.log('creating', fileUrl, contentType, content);
-      await this.createFileOrFolder(fileUrl, contentType, content);
       const metadata = `
 @prefix schema: <http://https://schema.org/#>.
 
 <>
     schema:keywords "SomeTag, AnotherTag".
 `;
-      console.log('creating', metaUrl, 'text/turtle', metadata);
+      console.log('creating', fileUrl, contentType, content, metadata);
 
-      await this.createFileOrFolder(metaUrl, 'text/turtle', metadata);
+      await this.createFileOrFolder(fileUrl, contentType, content, metadata);
       console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
     } catch (error) {
