@@ -339,38 +339,24 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * If creating container, please include tailing slash "/"
    * If creating resource, please include tailing extension ".txt"
    * @param {string} url the file or folder url to be created
+   * @param {string} [metaContent=''] optional metadata, should be turtle
    */
   async createFileOrFolder(
     url: string,
     contentType: string = 'text/turtle',
     content: Symbol | string = this.folderSymbol,
+    metaContent: string = '',
   ) {
-    // first check if folder exists, so we can put this file inside
-    const urlObj = new URL(url);
-    const pathName = urlObj.pathname;
-    const hostName = urlObj.hostname;
-    const fileOrFolderNameToCreate = basename(url);
-    const parentFolder = dirname(pathName);
-    const parentUrl = `https://${hostName}${parentFolder}`;
-    if (parentFolder !== '/') {
-      const parentFolderResponse: Response = await solidAuthClient.fetch(parentUrl);
-      if (parentFolderResponse.status === 404) {
-        await this.createFileOrFolder(parentUrl);
-      }
-    }
-    // parent folder now exists, create the thing itself
-    const link =
-      content === this.folderSymbol
-        ? '<http://www.w3.org/ns/ldp#BasicContainer>; rel="type"'
-        : '<http://www.w3.org/ns/ldp#Resource>; rel="type"';
-    const init = {
-      method: 'POST',
-      headers: { slug: fileOrFolderNameToCreate, link, 'Content-Type': contentType },
-      body: content === this.folderSymbol ? '' : content,
-    };
+    // create meta file first, dealing all possible error
+    const metaUrl = `${url}.meta`;
     try {
       // let parent folder create a resource named ${slug}
-      const creationResponse: Response = await solidAuthClient.fetch(parentUrl, init);
+      const creationResponse: Response = await solidAuthClient.fetch(metaUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'text/turtle' },
+        body: metaContent,
+      });
+      // handling errors
       // check it's 201 Created
       if (creationResponse.statusText === 'Origin Unauthorized') {
         throw new Error(
@@ -383,9 +369,32 @@ class SoLiDTiddlyWikiSyncAdaptor {
         throw new Error(`${creationResponse.status}, ${creationResponse.statusText}`);
       }
     } catch (error) {
-      throw new Error(
-        `SOLID004 createFileOrFolder() creating ${fileOrFolderNameToCreate} on ${parentUrl} failed with ${error}`,
-      );
+      throw new Error(`SOLID004 createFileOrFolder() creating ${metaUrl} failed with ${error}`);
+    }
+    // folder is created recursively by PUT
+    if (typeof content === 'string') {
+      // now that container exists (created by PUT), and all possible errors are gone, we can create the file it self
+      // we use POST for this so we can tell container that '<xxx.meta.ttl>; rel="describedby"' in Link
+      const urlObj = new URL(url);
+      const pathName = urlObj.pathname;
+      const hostName = urlObj.hostname;
+      /** let parent folder create a resource named ${slug} */
+      const slug = basename(url);
+      const parentFolder = dirname(pathName);
+      const parentUrl = `https://${hostName}${parentFolder}`;
+      const link = `<http://www.w3.org/ns/ldp#Resource>; rel="type", <${slug}.meta>; rel="describedby"`;
+      try {
+        const creationResponse: Response = await solidAuthClient.fetch(parentUrl, {
+          method: 'POST',
+          headers: { link, slug, 'Content-Type': contentType },
+          body: content,
+        });
+        if (creationResponse.status !== 201) {
+          throw new Error(`${creationResponse.status}, ${creationResponse.statusText}`);
+        }
+      } catch (error) {
+        throw new Error(`SOLID004 createFileOrFolder() creating ${url} failed with ${error}`);
+      }
     }
   }
 }
