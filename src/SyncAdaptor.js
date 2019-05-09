@@ -82,8 +82,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       return;
     }
     console.log('getSkinnyTiddlers');
-    // this will create a index for tiddlywiki on the POD if we don't have one
-    // and return turtle files describing all tiddlers' metadata
+    /*
+    use the following strategy to speed up the initial load speed:
+
+      1. only load title from the container on the startup.
+      2. load all metadata (maybe a little expensive) on the second getSkinnyTiddlers(), maybe these metadata will be used in searching? (I'm not sure about this!)
+      3. only load title and modified from the container on subsequent getSkinnyTiddlers(), only for TW to determine whether to trigger loadTiddler(). (In case you have changes from other devices or other people in your collaboration team.)
+    */
 
     this.updateIndexStore();
     const queryEngine = newEngine();
@@ -208,7 +213,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
   store = new Store();
 
-  /** load containers turtle files and clear the store then add them to store */
+  /** load containers turtle files and clear the local RDF store then add them to local RDF store
+   * this will create a index for tiddlywiki on the POD if we don't have one
+   * and return turtle files describing all tiddlers' metadata
+   */
   async updateIndexStore() {
     const containerTtlFiles = await this.getTWContainersOnPOD();
 
@@ -293,9 +301,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
   /** Scan index files, return the content, create if no exists */
   async getTWContainersOnPOD(): Promise<{ uri: string, text: string }[]> {
+    // collect info to build URL of containers
     const podUrl = await this.getPodUrl();
     const containerPaths = this.getTWContainersList();
     const containerURIs = containerPaths.map(path => `${podUrl}${path}`);
+    // fetch all URLs
     const containerTtlFiles = await Promise.all(
       containerURIs.map(uri =>
         solidAuthClient
@@ -310,6 +320,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       ),
     );
     console.log('containerTtlFiles', containerTtlFiles);
+    // create container if it doesn't exists (404)
     await Promise.all(
       containerTtlFiles
         .filter(containerTtlFile => containerTtlFile.status === 404)
@@ -324,10 +335,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
   folderSymbol = Symbol('folder');
 
   /**
-   * Recursively create parent folder then the file itself
-   * This function only creates turtle file ends with .ttl
-   * Or folder ends without slash
-   * @param {string} uri the file or folder uri to be created
+   * Recursively create parent folder (using PUT xxx.meta.ttl) then create the file (xxx.ttl) itself
+   * If creating container, please include tailing slash "/"
+   * If creating resource, please include tailing extension ".txt"
+   * @param {string} url the file or folder url to be created
    */
   async createFileOrFolder(
     url: string,
