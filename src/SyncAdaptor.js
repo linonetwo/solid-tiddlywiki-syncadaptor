@@ -156,35 +156,31 @@ class SoLiDTiddlyWikiSyncAdaptor {
       const metaUrl = `${fileUrl}.meta`;
       // delete and recreate
       console.log(`deleting ${fileUrl} and ${metaUrl}`);
-      await Promise.all([
+      await allSettled([
         solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
         solidAuthClient.fetch(metaUrl, { method: 'DELETE' }),
-        // TODO: there should not be `${metaUrl}.ttl`, but currently it just creates it
-        solidAuthClient.fetch(`${metaUrl}.ttl`, { method: 'DELETE' }),
       ]);
       // recreate
       // make metadata json-ld, then convert to turtle
       // try this in https://runkit.com/linonetwo/5cd54c8a0a18bf001b479c2a
-      const metadataJsonLd = omit(tiddler, ['text']);
+      const metadataJsonLd = omit(tiddler.fields, ['text']);
       metadataJsonLd['@context'] = this.jsonLdContext;
-      metadataJsonLd['@id'] = '';
-      let content: string = await rdfTranslator(metadataJsonLd, 'json-ld', 'n3');
-      // TODO: relative URI is buggy https://bitbucket.org/alexstolz/rdf-translator/issues/7/handle-relative-uri
-      content = content.replace('<file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/>', '<>');
+      // TODO: relative URI is buggy https://bitbucket.org/alexstolz/rdf-translator/issues/7/handle-relative-uri , so not using relative url here, instead, use full url
+      metadataJsonLd['@id'] = fileUrl;
+      console.warn(JSON.stringify(metadataJsonLd, null, '  '));
+      
+      const metadata: string = await rdfTranslator(JSON.stringify(metadataJsonLd), 'json-ld', 'n3');
+      console.log('finish rdfTranslator from json-ld to n3\n', metadata);
+      
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
-      const metadata = `
-@prefix schema: <http://https://schema.org/#>.
+      console.log('creating', fileUrl, contentType, 'metadata: ', metadata);
 
-<>
-    schema:keywords "SomeTag, AnotherTag".
-`;
-      console.log('creating', fileUrl, contentType, content, metadata);
-
-      await this.createFileOrFolder(fileUrl, contentType, content, metadata);
+      await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
       console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
     } catch (error) {
       callback(error, { solid: containerPath }, sha1(tiddler.fields));
+      console.error(error);
       throw new Error(`SOLID005 saveTiddler() ${error}`);
     }
   }
