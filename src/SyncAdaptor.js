@@ -2,15 +2,30 @@
 import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
-import { newEngine } from '@comunica/actor-init-sparql-rdfjs';
-import { Store, Parser } from 'n3';
-import { compact, flatten } from 'lodash';
+import rdfTranslator from 'rdf-translator';
+import { compact, flatten, omit } from 'lodash';
 import allSettled from 'promise.allsettled';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
 class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
+
+  jsonLdContext = {
+    dc: 'http://purl.org/dc/elements/1.1/',
+    dcterms: 'http://purl.org/dc/terms/',
+    schema: 'https://schema.org/',
+    ex: 'http://example.org/vocab#',
+    created: 'schema:dateCreated',
+    creator: 'schema:creator',
+    text: 'schema:text',
+    title: 'dc:title',
+    tags: 'schema:keywords',
+    type: 'dc:type',
+    modified: 'schema:dateModified',
+    modifier: 'schema:contributor',
+    _canonical_uri: 'schema:url',
+  };
 
   constructor(options: { wiki: Wiki }) {
     this.wiki = options.wiki;
@@ -91,17 +106,19 @@ class SoLiDTiddlyWikiSyncAdaptor {
       3. only load title and modified from the container on subsequent getSkinnyTiddlers(), only for TW to determine whether to trigger loadTiddler(). (In case you have changes from other devices or other people in your collaboration team.)
     */
 
-    this.updateIndexStore();
-    const queryEngine = newEngine();
-    const result = await queryEngine.query('SELECT * { ?s ?p ?o }', {
-      sources: [{ type: 'rdfjsSource', value: this.store }],
-    });
-    result.bindingsStream.on('data', data => {
-      console.log(data.get('?s').value, data.get('?p').value, data.get('?o').value);
-    });
-    result.bindingsStream.on('end', data => {
-      console.log(`on('end',`, data);
-    });
+    const containerTtlFiles = await this.getTWContainersOnPOD();
+
+    const skinnyTiddlersFromContainers = await Promise.all(
+      containerTtlFiles.map(async ({ uri, text }) => {
+        /** json-ld whose @id is relative, we need to prefix it with ${uri} */
+        const relativeJsonLdResult = await rdfTranslator(text, 'n3', 'json-ld');
+        // TODO: make sure all key in the json are simple, without any context prefix
+        return relativeJsonLdResult;
+      }),
+    );
+    // TODO: handle tiddler conflict from different containers
+    const allSkinnyTiddlers = flatten(skinnyTiddlersFromContainers);
+    console.log(allSkinnyTiddlers);
 
     callback(undefined, []);
   }
@@ -140,8 +157,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
         solidAuthClient.fetch(`${metaUrl}.ttl`, { method: 'DELETE' }),
       ]);
       // recreate
-      // TODO: make it jsonld to turtle
-      const content = JSON.stringify(tiddler, null, '  ');
+      // make metadata json-ld, then convert to turtle
+      const metadataJsonLd = omit(tiddler, ['text']);
+      metadataJsonLd['@context'] = this.jsonLdContext;
+      metadataJsonLd['@id'] = '';
+      let content: string = await rdfTranslator(metadataJsonLd, 'json-ld', 'n3');
+      // TODO: relative URI is buggy https://bitbucket.org/alexstolz/rdf-translator/issues/7/handle-relative-uri
+      content = content.replace('<file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/>', '<>');
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
       const metadata = `
 @prefix schema: <http://https://schema.org/#>.
@@ -184,8 +206,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
       for (let index = 0; index < result.length; index += 1) {
         const [text, metadata] = result[index];
         if (text && metadata) {
-          // TODO: metadata turtle to jsonLD
-          callback(undefined, { title, text });
+          // metadata turtle to jsonLD
+          // eslint-disable-next-line no-await-in-loop
+          const metadataJsonLd = await rdfTranslator(metadata, 'n3', 'json-ld');
+          callback(undefined, { title, text, ...omit(metadataJsonLd, ['@context', '@id']) });
           return;
         }
       }
@@ -220,24 +244,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
   //   |  __  |    |  _| _   | |   _   |  ___/  |  _| _   |  __ /
   //  _| |  | |_  _| |__/ | _| |__/ | _| |_    _| |__/ | _| |  \ \_
   // |____||____||________||________||_____|  |________||____| |___|
-
-  store = new Store();
-
-  /** load containers turtle files and clear the local RDF store then add them to local RDF store
-   * this will create a index for tiddlywiki on the POD if we don't have one
-   * and return turtle files describing all tiddlers' metadata
-   */
-  async updateIndexStore() {
-    const containerTtlFiles = await this.getTWContainersOnPOD();
-
-    this.store = new Store();
-    // const session: SoLiDSession = await solidAuthClient.currentSession();
-    const parsedRdfQuads = containerTtlFiles.map(({ uri, text }) => {
-      const parser = new Parser({ format: 'Turtle', baseIRI: uri });
-      return parser.parse(text);
-    });
-    parsedRdfQuads.forEach(quads => this.store.addQuads(quads));
-  }
 
   /**
    * given a tiddler 's title and container path ('solid'), return file full relative path to hostname
