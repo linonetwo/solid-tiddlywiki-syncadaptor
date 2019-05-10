@@ -229,7 +229,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
   /**
    * given a tiddler 's title and container path ('solid'), return file full relative path to hostname
-   * will perform title.replace('$:', 'dollar__');
+   * will perform `encodeURIComponent(title) twice`
    */
   getTiddlerContainerPath(title: string, solid?: string) {
     // assign it with a default container if it doesn't have one
@@ -237,7 +237,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
     if (!containerPath) {
       [containerPath] = this.getTWContainersList();
     }
-    const fileLocation = `${containerPath}/${title}`.replace('$:', 'dollar__');
+    // https://forum.solidproject.org/t/how-to-store-file-with-in-its-name/1816
+    const fileLocation = `${containerPath}/${encodeURIComponent(encodeURIComponent(title))}`;
     return { fileLocation, containerPath };
   }
 
