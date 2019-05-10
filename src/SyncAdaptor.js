@@ -5,6 +5,7 @@ import { dirname, basename } from 'path-browserify';
 import { newEngine } from '@comunica/actor-init-sparql-rdfjs';
 import { Store, Parser } from 'n3';
 import { compact, flatten } from 'lodash';
+import allSettled from 'promise.allsettled';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -166,22 +167,23 @@ class SoLiDTiddlyWikiSyncAdaptor {
   async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: TiddlerFields) => void) {
     console.log('loadTiddler', title);
     const podUrl = await this.getPodUrl();
-    const result: Array<Array<string | null>> = await Promise.all(
-      this.getTWContainersList().map(path => {
+    const result: Array<Array<?string | null>> = await Promise.all(
+      this.getTWContainersList().map(async path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         const fileUrl = `${podUrl}${fileLocation}`;
         const metaUrl = `${fileUrl}.meta`;
         const processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
-        return Promise.all([
+        const [{ value: text }, { value: metadata }]: Array<{ value?: string | null }> = await allSettled([
           solidAuthClient.fetch(fileUrl).then(processResponse),
           solidAuthClient.fetch(metaUrl).then(processResponse),
         ]);
+        return [text, metadata];
       }),
     );
     if (compact(flatten(result)).length > 0) {
       for (let index = 0; index < result.length; index += 1) {
-        const [text, metaContent] = result[index];
-        if (text && metaContent) {
+        const [text, metadata] = result[index];
+        if (text && metadata) {
           // TODO: metadata turtle to jsonLD
           callback(undefined, { title, text });
           return;
