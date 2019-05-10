@@ -348,7 +348,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   /**
    * Recursively create parent folder (using PUT xxx.meta.ttl) then create the file (xxx.ttl) itself
    * If creating container, please include tailing slash "/"
-   * If creating resource, please include tailing extension ".txt"
+   * If creating resource, please DO NOT include tailing extension ".txt" [NSS will add extension](https://github.com/solid/node-solid-server/blob/19d1bf0ff5a9a59bb59300b8fce3bfcd038d0ea7/lib/handlers/post.js#L86)
    * @param {string} url the file or folder url to be created
    * @param {string} [metaContent=''] optional metadata, should be turtle
    */
@@ -397,7 +397,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       try {
         const creationResponse: Response = await solidAuthClient.fetch(parentUrl, {
           method: 'POST',
-          headers: { link, slug, 'Content-Type': contentType },
+          headers: { link, slug, 'content-type': contentType },
           body: content,
         });
         if (creationResponse.status !== 201) {
