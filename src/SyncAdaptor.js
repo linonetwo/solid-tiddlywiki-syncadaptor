@@ -4,7 +4,7 @@ import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
 import { newEngine } from '@comunica/actor-init-sparql-rdfjs';
 import { Store, Parser } from 'n3';
-import { compact } from 'lodash';
+import { compact, flatten } from 'lodash';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -163,24 +163,34 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {string} title Title of tiddler to be retrieved
    * @param {(err,tiddlerFields) => void} callback See https://tiddlywiki.com/#TiddlerFields
    */
-  async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: Tiddler) => void) {
+  async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: TiddlerFields) => void) {
     console.log('loadTiddler', title);
     const podUrl = await this.getPodUrl();
-    const result = await Promise.all(
+    const result: Array<Array<string | null>> = await Promise.all(
       this.getTWContainersList().map(path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
-        return solidAuthClient
-          .fetch(`${podUrl}${fileLocation}`)
-          .then((res: Response) => (res.status === 200 ? res.text() : null));
+        const fileUrl = `${podUrl}${fileLocation}`;
+        const metaUrl = `${fileUrl}.meta`;
+        const processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
+        return Promise.all([
+          solidAuthClient.fetch(fileUrl).then(processResponse),
+          solidAuthClient.fetch(metaUrl).then(processResponse),
+        ]);
       }),
     );
-    if (result.length > 0) {
-      // TODO: turtle to jsonLD
-      // TODO: .replace('dollar__', '$:');
-      callback(undefined, {});
-    } else {
-      callback(new Error('loadTiddler() no found in all Container Path'));
+    if (compact(flatten(result)).length > 0) {
+      for (let index = 0; index < result.length; index += 1) {
+        const [text, metaContent] = result[index];
+        if (text && metaContent) {
+          // TODO: metadata turtle to jsonLD
+          callback(undefined, { title, text });
+          return;
+        }
+      }
     }
+    callback(
+      new Error(`loadTiddler() ${title} no found in all Container Path, or it don't have metadata in all Containers`),
+    );
   }
 
   /** Delete a tiddler from the server.
