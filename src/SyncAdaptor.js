@@ -115,11 +115,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const containerTtlFiles = await this.getTWContainersOnPOD();
 
     const skinnyTiddlersFromContainers = await Promise.all(
-      containerTtlFiles.map(async ({ uri, text }) => {
-        /** json-ld whose @id is relative, we need to prefix it with ${uri} */
-        const relativeJsonLdResult = await rdfTranslator(text, 'n3', 'json-ld');
+      containerTtlFiles.map(async ({ text }) => {
+        const tiddlerJsonLd = await rdfTranslator(text, 'n3', 'json-ld');
         // make sure all key in the json are simple, without any context prefix
-        return jsonld.compact(relativeJsonLdResult, this.keyContext);
+        return jsonld.compact(tiddlerJsonLd, this.keyContext);
       }),
     );
     // TODO: handle tiddler conflict from different containers
