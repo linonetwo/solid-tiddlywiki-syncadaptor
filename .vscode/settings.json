@@ -1,6 +1,43 @@
+
 {
+  "todo-tree.excludeGlobs": ["**/demo-wiki/**", "**/flow-typed/**", "**/node_modules/**", "**/dist/**"],
   "javascript.validate.enable": false,
   "cSpell.words": [
     "allsettled"
+  ],
+  "cSpell.enabledLanguageIds": [
+    "asciidoc",
+    "c",
+    "cpp",
+    "csharp",
+    "css",
+    "go",
+    "handlebars",
+    "html",
+    "jade",
+    "java",
+    "javascript",
+    "javascriptreact",
+    "json",
+    "jsonc",
+    "jsx",
+    "latex",
+    "less",
+    "markdown",
+    "php",
+    "plaintext",
+    "pug",
+    "python",
+    "restructuredtext",
+    "rust",
+    "scala",
+    "scss",
+    "sparql",
+    "text",
+    "turtle",
+    "typescript",
+    "typescriptreact",
+    "yaml",
+    "yml"
   ]
 }

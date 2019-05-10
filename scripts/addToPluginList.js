@@ -1,3 +1,4 @@
+/* eslint-env node */
 const { existsSync, readFileSync, writeFileSync } = require('fs');
 
 const tiddlywikiInfoPath = 'demo-wiki/tiddlywiki.info';

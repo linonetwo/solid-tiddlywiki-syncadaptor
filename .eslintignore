@@ -1,4 +1,3 @@
-flow-typed/
-dist/
-demo-wiki/
-node_modules/
+flow-typed/*
+dist/*
+demo-wiki/*

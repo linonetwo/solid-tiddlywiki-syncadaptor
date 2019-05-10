@@ -1,4 +1,5 @@
-const { existsSync, readFileSync, writeFileSync } = require('fs');
+/* eslint-env node */
+const { existsSync, writeFileSync } = require('fs');
 
 const defaultTiddlers = `
 created: 20190501091923756
