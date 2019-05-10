@@ -3,6 +3,7 @@ import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
 import rdfTranslator from 'rdf-translator';
+import jsonld from 'jsonld';
 import { compact, flatten, omit } from 'lodash';
 import allSettled from 'promise.allsettled';
 
@@ -11,11 +12,14 @@ import { type SoLiDSession } from './SoLiDSessionType';
 class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
 
-  jsonLdContext = {
+  metaContext = {
     dc: 'http://purl.org/dc/elements/1.1/',
     dcterms: 'http://purl.org/dc/terms/',
     schema: 'https://schema.org/',
     ex: 'http://example.org/vocab#',
+  };
+
+  keyContext = {
     created: 'schema:dateCreated',
     creator: 'schema:creator',
     text: 'schema:text',
@@ -26,6 +30,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
     modifier: 'schema:contributor',
     _canonical_uri: 'schema:url',
   };
+
+  jsonLdContext = { ...this.metaContext, ...this.keyContext };
 
   constructor(options: { wiki: Wiki }) {
     this.wiki = options.wiki;
@@ -112,8 +118,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
       containerTtlFiles.map(async ({ uri, text }) => {
         /** json-ld whose @id is relative, we need to prefix it with ${uri} */
         const relativeJsonLdResult = await rdfTranslator(text, 'n3', 'json-ld');
-        // TODO: make sure all key in the json are simple, without any context prefix
-        return relativeJsonLdResult;
+        // make sure all key in the json are simple, without any context prefix
+        return jsonld.compact(relativeJsonLdResult, this.keyContext);
       }),
     );
     // TODO: handle tiddler conflict from different containers

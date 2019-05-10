@@ -30,6 +30,7 @@
   },
   "homepage": "https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#readme",
   "dependencies": {
+    "jsonld": "^1.6.0",
     "path-browserify": "^1.0.0",
     "promise.allsettled": "^1.0.1",
     "rdf-translator": "^2.0.0",
