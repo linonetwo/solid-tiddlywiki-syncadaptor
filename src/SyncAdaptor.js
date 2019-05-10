@@ -118,6 +118,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       containerTtlFiles.map(async ({ text }) => {
         const tiddlerJsonLd = await rdfTranslator(text, 'n3', 'json-ld');
         // make sure all key in the json are simple, without any context prefix
+        // try this in https://runkit.com/linonetwo/5cd54c3dea2a25001a368eef
         return jsonld.compact(tiddlerJsonLd, this.keyContext);
       }),
     );
@@ -163,6 +164,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       ]);
       // recreate
       // make metadata json-ld, then convert to turtle
+      // try this in https://runkit.com/linonetwo/5cd54c8a0a18bf001b479c2a
       const metadataJsonLd = omit(tiddler, ['text']);
       metadataJsonLd['@context'] = this.jsonLdContext;
       metadataJsonLd['@id'] = '';
