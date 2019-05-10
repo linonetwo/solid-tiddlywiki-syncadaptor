@@ -1,4 +1,7 @@
 [ignore]
+<PROJECT_ROOT>/dist/
+<PROJECT_ROOT>/demo-wiki/
+<PROJECT_ROOT>/node_modules/
 
 [include]
 
