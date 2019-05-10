@@ -18,10 +18,16 @@ module.exports = {
           loader: 'babel-loader',
         },
       },
+      { test: /\.json$/, exclude: /node_modules/, use: { loader: 'json-loader' } },
     ],
   },
   optimization: {
     minimize: process.env.NODE_ENV !== 'development',
+  },
+  node: {
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty',
   },
   externals: [],
 };

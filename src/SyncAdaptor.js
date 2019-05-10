@@ -2,7 +2,7 @@
 import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
 import { dirname, basename } from 'path-browserify';
-import rdfTranslator from 'rdf-translator';
+import rdfTranslator from 'rdf-translator/index.es5';
 import jsonld from 'jsonld';
 import { compact, flatten, omit } from 'lodash';
 import allSettled from 'promise.allsettled';
