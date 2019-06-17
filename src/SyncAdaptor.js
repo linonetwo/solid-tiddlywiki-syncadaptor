@@ -75,7 +75,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   /** Attempts to login to the server with specified credentials. This method is optional. */
   async login() {
     let session = await solidAuthClient.currentSession();
-    const popupUri = 'https://solid.community/common/popup.html';
+    const popupUri = 'https://solid.authing.cn/common/popup.html';
     if (!session) {
       session = await solidAuthClient.popupLogin({ popupUri });
       (session: SoLiDSession);
