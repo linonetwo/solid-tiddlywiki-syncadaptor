@@ -54,11 +54,17 @@ See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github
 
 ## Todo
 
-Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3).
+### Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3)
 
-Collaborating should consider diff and conflict.
+### Collaborating should consider diff and conflict
 
-I18N https://groups.google.com/forum/#!topic/tiddlywikidev/9prY0BRCoGo
+I think a simple way to prevent conflict is letting people working on several different tiddlers, and transclude them together.
+
+To prevent people editing same file, maybe you can use webrtc or libp2p to indicate a tiddler is currently being editing, thus prevent people from change it. Just like how Quip lock a line.
+
+### I18N
+
+https://groups.google.com/forum/#!topic/tiddlywikidev/9prY0BRCoGo
 
 ## Development
 
