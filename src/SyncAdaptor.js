@@ -152,14 +152,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     try {
       const podUrl = await this.getPodUrl();
       const fileUrl = `${podUrl}${fileLocation}`;
-      const metaUrl = `${fileUrl}.metadata`;
-      // delete and recreate
-      console.log(`deleting ${fileUrl} and ${metaUrl}`);
-      await allSettled([
-        solidAuthClient.fetch(fileUrl, { method: 'DELETE' }),
-        solidAuthClient.fetch(metaUrl, { method: 'DELETE' }),
-      ]);
-      // recreate
+      // use PUT to override or create
       // make metadata json-ld, then convert to turtle
       // try this in https://runkit.com/linonetwo/5cd54c8a0a18bf001b479c2a
       const metadataJsonLd = omit(tiddler.fields, ['text']);
