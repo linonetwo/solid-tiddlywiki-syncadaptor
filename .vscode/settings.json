@@ -39,5 +39,11 @@
     "typescriptreact",
     "yaml",
     "yml"
+  ],
+  "todo-tree.filtering.excludeGlobs": [
+    "**/demo-wiki/**",
+    "**/flow-typed/**",
+    "**/node_modules/**",
+    "**/dist/**"
   ]
 }
