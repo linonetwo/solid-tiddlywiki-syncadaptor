@@ -159,16 +159,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       metadataJsonLd['@context'] = this.jsonLdContext;
       // TODO: relative URI is buggy https://bitbucket.org/alexstolz/rdf-translator/issues/7/handle-relative-uri , so not using relative url here, instead, use full url
       metadataJsonLd['@id'] = fileUrl;
-      console.warn(JSON.stringify(metadataJsonLd, null, '  '));
-      
+      // rdf Translate from json-ld to n3
       const metadata: string = await rdfTranslator(JSON.stringify(metadataJsonLd), 'json-ld', 'n3');
-      console.log('finish rdfTranslator from json-ld to n3\n', metadata);
-      
+      // creating ${fileUrl} use ${contentType} with metadata ${metadata}
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
-      console.log('creating', fileUrl, contentType, 'metadata: ', metadata);
-
+      // saveTiddler
       await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
-      console.log('saveTiddler', tiddler.fields.title, Object.keys(tiddler.fields), sha1(tiddler.fields));
+      // saveTiddler requires tiddler.fields.title and adaptorInfo: Object.keys(tiddler.fields), and revision: sha1(tiddler.fields)
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
     } catch (error) {
       callback(error, { solid: containerPath }, sha1(tiddler.fields));
@@ -221,7 +218,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   async deleteTiddler(title: string, callback: (error?: Error) => void, tiddlerInfo: Object) {
     // delete file located at title, title itself is a path
-    console.log('deleteTiddler', title);
     const { fileLocation } = this.getTiddlerContainerPath(title, tiddlerInfo.solid);
     try {
       // delete and recreate
