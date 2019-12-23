@@ -312,7 +312,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   }
 
   /** Scan index files, return the content, create if no exists */
-  async getTWContainersOnPOD(): Promise<{ uri: string, text: string }[]> {
+  async getTWContainersOnPOD(): Promise<{ uri: string, text?: string, status: number }[]> {
     // collect info to build URL of containers
     const podUrl = await this.getPodUrl();
     const containerPaths = this.getTWContainersList();
