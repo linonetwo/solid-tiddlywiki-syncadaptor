@@ -74,7 +74,7 @@ Will init a local tiddler wiki and copy all tiddlers to the `plugins` folder ins
 
 ### `npm run dev`
 
-Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS file. A reload of wiki server is needed to serve the new JS bundle.
+Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS file. A reload of wiki server will be performed to serve the new JS bundle.
 
 ### References
 
@@ -84,7 +84,7 @@ Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS f
 
 #### TiddlyWiki
 
-Some APIs are in [tiddlywiki.com](https://tiddlywiki.com/) and some are in [tiddlywiki.com/dev/](https://tiddlywiki.com/dev/).
+Some APIs are in [tiddlywiki.com](https://tiddlywiki.com/) and some are in [tiddlywiki.com/dev/](https://tiddlywiki.com/dev/). For example, [SyncAdaptorModules](https://tiddlywiki.com/dev/#SyncAdaptorModules:SyncAdaptorModules%20Syncadaptor%20Saver).
 
 General discussions are in [tiddlywiki google groups](https://groups.google.com/forum/#!forum/tiddlywiki) and [discord](https://discord.gg/tYzK9eC).
 
