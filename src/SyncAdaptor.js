@@ -75,9 +75,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
   /** Attempts to login to the server with specified credentials. This method is optional. */
   async login() {
     let session = await solidAuthClient.currentSession();
-    const popupUri = 'https://solid.authing.cn/common/popup.html';
     if (!session) {
-      session = await solidAuthClient.popupLogin({ popupUri });
+      session = await solidAuthClient.popupLogin({ popupUri: 'https://solid.authing.cn/common/popup.html' });
       (session: SoLiDSession);
     }
     // https://github.com/Jermolene/TiddlyWiki5/issues/3937
@@ -153,7 +152,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     try {
       const podUrl = await this.getPodUrl();
       const fileUrl = `${podUrl}${fileLocation}`;
-      const metaUrl = `${fileUrl}.meta`;
+      const metaUrl = `${fileUrl}.metadata`;
       // delete and recreate
       console.log(`deleting ${fileUrl} and ${metaUrl}`);
       await allSettled([
@@ -196,7 +195,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       this.getTWContainersList().map(async path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         const fileUrl = `${podUrl}${fileLocation}`;
-        const metaUrl = `${fileUrl}.meta`;
+        const metaUrl = `${fileUrl}.metadata`;
         const processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
         const [{ value: text }, { value: metadata }]: Array<{ value?: string | null }> = await allSettled([
           solidAuthClient.fetch(fileUrl).then(processResponse),
@@ -326,19 +325,22 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const containerPaths = this.getTWContainersList();
     const containerURIs = containerPaths.map(path => `${podUrl}${path}`);
     // fetch all URLs
-    const containerTtlFiles = await Promise.all(
+    const containerTtlFiles = compact(await Promise.all(
       containerURIs.map(uri =>
         solidAuthClient
           .fetch(uri)
           .then(async (res: Response) => {
             // might be 401 for /private , 403 for ACL blocking , 404 for uncreated, 200 for good
+            console.error('getTWContainersOnPOD() get it', uri, res.status);
             return { status: res.status, uri, text: await res.text() };
           })
           .catch(error => {
-            console.error(uri, error);
+            console.error('getTWContainersOnPOD() containerTtlFiles', uri, error);
+            // https://github.com/solid/node-solid-server/issues/1231 cause 404 to be 204 and rejects
+            return { status: 404, uri };
           }),
       ),
-    );
+    ));
     console.log('containerTtlFiles', containerTtlFiles);
     // create container if it doesn't exists (404)
     await Promise.all(
@@ -355,9 +357,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
   folderSymbol = Symbol('folder');
 
   /**
-   * Recursively create parent folder (using PUT xxx.meta.ttl) then create the file (xxx.ttl) itself
+   * Recursively create parent folder (using PUT xxx.metadata.ttl) then create the file (xxx.ttl) itself
    * If creating container, please include tailing slash "/"
    * If creating resource, please DO NOT include tailing extension ".txt" [NSS will add extension](https://github.com/solid/node-solid-server/blob/19d1bf0ff5a9a59bb59300b8fce3bfcd038d0ea7/lib/handlers/post.js#L86)
+   * I don't use *.meta , since trying to delete *.meta will resulted in "trying to regard meta file as regular file" or so, quite annoying
    * @param {string} url the file or folder url to be created
    * @param {string} [metaContent=''] optional metadata, should be turtle
    */
@@ -368,7 +371,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     metaContent: string = '',
   ) {
     // create meta file first, dealing all possible error
-    const metaUrl = `${url}.meta`;
+    const metaUrl = `${url}.metadata`;
     try {
       // let parent folder create a resource named ${slug}
       const creationResponse: Response = await solidAuthClient.fetch(metaUrl, {
@@ -394,19 +397,14 @@ class SoLiDTiddlyWikiSyncAdaptor {
     // folder is created recursively by PUT
     if (typeof content === 'string') {
       // now that container exists (created by PUT), and all possible errors are gone, we can create the file it self
-      // we use POST for this so we can tell container that '<xxx.meta.ttl>; rel="describedby"' in Link
-      const urlObj = new URL(url);
-      const pathName = urlObj.pathname;
-      const hostName = urlObj.hostname;
+      // we should have use POST for this so we can tell container that '<xxx.meta.ttl>; rel="describedby"' in Link , but it is buggy in solid (https://forum.solidproject.org/t/error-saving-back-error-web-error-409-conflict-on-put/1011/6)
       /** let parent folder create a resource named ${slug} */
       const slug = basename(url);
-      const parentFolder = dirname(pathName);
-      const parentUrl = `https://${hostName}${parentFolder}`;
-      const link = `<http://www.w3.org/ns/ldp#Resource>; rel="type", <${slug}.meta>; rel="describedby"`;
+      const link = `<http://www.w3.org/ns/ldp#Resource>; rel="type", <${slug}.metadata>; rel="describedby"`;
       try {
-        const creationResponse: Response = await solidAuthClient.fetch(parentUrl, {
-          method: 'POST',
-          headers: { link, slug, 'content-type': contentType },
+        const creationResponse: Response = await solidAuthClient.fetch(url, {
+          method: 'PUT',
+          headers: { link, 'content-type': contentType },
           body: content,
         });
         if (creationResponse.status !== 201) {
