@@ -14,7 +14,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
 
   metaContext = {
-    "@vocab": "http://schema.org/",
+    '@vocab': 'http://schema.org/',
     dc: 'http://purl.org/dc/elements/1.1/',
     dcterms: 'http://purl.org/dc/terms/',
     schema: 'https://schema.org/',
@@ -255,6 +255,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   async getJSONLDFromURI(uri: string): Promise<Object> {
     const metadataTtl = await solidAuthClient.fetch(uri).then(this.processResponse);
+    // TODO: list inside metadata JSON will out of order when translated back from n3
     const expandedJSONLD = await rdfTranslator(metadataTtl, 'n3', 'json-ld');
     try {
       const compactJSONLD = await jsonld.compact(JSON.parse(expandedJSONLD), this.jsonLdContext);
