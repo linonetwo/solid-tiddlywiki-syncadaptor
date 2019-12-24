@@ -1,11 +1,12 @@
 // @flow
 import solidAuthClient from 'solid-auth-client';
 import sha1 from 'stable-sha1';
-import { dirname, basename } from 'path-browserify';
+import { basename } from 'path-browserify';
 import rdfTranslator from 'rdf-translator/index.es5';
 import jsonld from 'jsonld';
 import { compact, flatten, omit } from 'lodash';
 import allSettled from 'promise.allsettled';
+import ldflex from '@solid/query-ldflex';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -48,7 +49,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     console.log(
       'getTiddlerInfo',
       tiddler.fields.title,
-      this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid),
+      this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid)
     );
     return {
       solid: this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid).containerPath,
@@ -102,7 +103,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
       return;
     }
-    console.log('getSkinnyTiddlers');
     /*
     use the following strategy to speed up the initial load speed:
 
@@ -112,20 +112,21 @@ class SoLiDTiddlyWikiSyncAdaptor {
     */
 
     const containerTtlFiles = await this.getTWContainersOnPOD();
+    const containerURI = containerTtlFiles[0];
+    // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
+    const items = ldflex[`${containerURI}/`]['ldp:contains'];
+    const getItemTasks: Promise<Object>[] = [];
+    for await (const item of items) {
+      // get all metadata files
+      const fileURI = String(item);
+      if (fileURI.endsWith('.metadata')) {
+        getItemTasks.push(this.getJSONLDFromURI(fileURI));
+      }
+    }
+    const metaDataList = await Promise.all(getItemTasks);
+    console.log('getSkinnyTiddlers() loaded metaDataList', metaDataList);
 
-    const skinnyTiddlersFromContainers = await Promise.all(
-      containerTtlFiles.map(async ({ text }) => {
-        const tiddlerJsonLd = await rdfTranslator(text, 'n3', 'json-ld');
-        // make sure all key in the json are simple, without any context prefix
-        // try this in https://runkit.com/linonetwo/5cd54c3dea2a25001a368eef
-        return jsonld.compact(tiddlerJsonLd, this.keyContext);
-      }),
-    );
-    // TODO: handle tiddler conflict from different containers
-    const allSkinnyTiddlers = flatten(skinnyTiddlersFromContainers);
-    console.log(allSkinnyTiddlers);
-
-    callback(undefined, []);
+    callback(undefined, metaDataList);
   }
 
   /**
@@ -136,7 +137,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   async saveTiddler(
     tiddler: Tiddler,
-    callback: (error?: Error, adaptorInfo?: Object, revision?: string) => void,
+    callback: (error?: Error, adaptorInfo?: Object, revision?: string) => void
     // tiddlerInfo: Object,
   ) {
     const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
@@ -186,13 +187,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         const fileUrl = `${podUrl}${fileLocation}`;
         const metaUrl = `${fileUrl}.metadata`;
-        const processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
         const [{ value: text }, { value: metadata }]: Array<{ value?: string | null }> = await allSettled([
-          solidAuthClient.fetch(fileUrl).then(processResponse),
-          solidAuthClient.fetch(metaUrl).then(processResponse),
+          solidAuthClient.fetch(fileUrl).then(this.processResponse),
+          solidAuthClient.fetch(metaUrl).then(this.processResponse),
         ]);
         return [text, metadata];
-      }),
+      })
     );
     if (compact(flatten(result)).length > 0) {
       for (let index = 0; index < result.length; index += 1) {
@@ -207,7 +207,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       }
     }
     callback(
-      new Error(`loadTiddler() ${title} no found in all Container Path, or it don't have metadata in all Containers`),
+      new Error(`loadTiddler() ${title} no found in all Container Path, or it don't have metadata in all Containers`)
     );
   }
 
@@ -237,6 +237,24 @@ class SoLiDTiddlyWikiSyncAdaptor {
   // |____||____||________||________||_____|  |________||____| |___|
 
   /**
+   *
+   * @param {*} title
+   * @param {*} solid
+   */
+  async getJSONLDFromURI(uri: string) {
+    const metadataTtl = await solidAuthClient.fetch(uri).then(this.processResponse);
+    const expandedJSONLD = await rdfTranslator(metadataTtl, 'n3', 'json-ld');
+    try {
+      const compactJSONLD = await jsonld.compact(JSON.parse(expandedJSONLD), this.jsonLdContext);
+      delete compactJSONLD['@id'];
+      delete compactJSONLD['@context'];
+      return compactJSONLD;
+    } catch (error) {
+      console.error('SOLID007 getJSONLDFromURI() failed', error, expandedJSONLD);
+    }
+  }
+
+  /**
    * given a tiddler 's title and container path ('solid'), return file full relative path to hostname
    * will perform `encodeURIComponent(title) twice`
    */
@@ -257,7 +275,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    */
   getTWContainersList() {
     const containerPathsString = this.wiki.getTiddlerText(
-      '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers',
+      '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers'
     );
     if (!containerPathsString) {
       throw new Error('SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()');
@@ -273,15 +291,15 @@ class SoLiDTiddlyWikiSyncAdaptor {
           path.startsWith('/public') ||
           path.startsWith('/private') ||
           path.startsWith('/inbox') ||
-          path.startsWith('/profile'),
+          path.startsWith('/profile')
       )
     ) {
       throw new Error(
         `SOLID001 getTWContainersList() get called, but some Containers is invalid ${JSON.stringify(
           containerPaths,
           null,
-          '  ',
-        )}`,
+          '  '
+        )}`
       );
     }
     return containerPaths;
@@ -308,39 +326,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
   }
 
   /** Scan index files, return the content, create if no exists */
-  async getTWContainersOnPOD(): Promise<{ uri: string, text?: string, status: number }[]> {
+  async getTWContainersOnPOD(): Promise<string[]> {
     // collect info to build URL of containers
     const podUrl = await this.getPodUrl();
     const containerPaths = this.getTWContainersList();
     const containerURIs = containerPaths.map(path => `${podUrl}${path}`);
-    // fetch all URLs
-    const containerTtlFiles = compact(await Promise.all(
-      containerURIs.map(uri =>
-        solidAuthClient
-          .fetch(uri)
-          .then(async (res: Response) => {
-            // might be 401 for /private , 403 for ACL blocking , 404 for uncreated, 200 for good
-            console.error('getTWContainersOnPOD() get it', uri, res.status);
-            return { status: res.status, uri, text: await res.text() };
-          })
-          .catch(error => {
-            console.error('getTWContainersOnPOD() containerTtlFiles', uri, error);
-            // https://github.com/solid/node-solid-server/issues/1231 cause 404 to be 204 and rejects
-            return { status: 404, uri };
-          }),
-      ),
-    ));
-    console.log('containerTtlFiles', containerTtlFiles);
-    // create container if it doesn't exists (404)
-    await Promise.all(
-      containerTtlFiles
-        .filter(containerTtlFile => containerTtlFile.status === 404)
-        .map(containerToCreate => {
-          return this.createFileOrFolder(containerToCreate.uri);
-        }),
-    );
-
-    return containerTtlFiles.filter(containerTtlFile => containerTtlFile.status === 200);
+    return containerURIs;
   }
 
   folderSymbol = Symbol('folder');
@@ -357,7 +348,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     url: string,
     contentType: string = 'text/turtle',
     content: Symbol | string = this.folderSymbol,
-    metaContent: string = '',
+    metaContent: string = ''
   ) {
     // create meta file first, dealing all possible error
     const metaUrl = `${url}.metadata`;
@@ -374,7 +365,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
         throw new Error(
           `You need to trust ${
             typeof window !== 'undefined' ? window.location.origin : ' this app'
-          } in SoLiD Panel. See https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#if-you-can-not-access-private-resources`,
+          } in SoLiD Panel. See https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#if-you-can-not-access-private-resources`
         );
       }
       if (creationResponse.status !== 201) {
@@ -404,6 +395,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
       }
     }
   }
+
+  processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
 }
 
 // only run this on the browser
