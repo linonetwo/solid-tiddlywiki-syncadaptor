@@ -165,6 +165,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // creating ${fileUrl} use ${contentType} with metadata ${metadata}
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
       // saveTiddler
+      console.log('saving!', tiddler);
+      
       await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
       // saveTiddler requires tiddler.fields.title and adaptorInfo: Object.keys(tiddler.fields), and revision: sha1(tiddler.fields)
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
@@ -182,29 +184,36 @@ class SoLiDTiddlyWikiSyncAdaptor {
   async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: TiddlerFields) => void) {
     console.log('loadTiddler', title);
     const podUrl = await this.getPodUrl();
-    const result: Array<Array<?string | null>> = await Promise.all(
-      this.getTWContainersList().map(async path => {
+    try {
+      const tryGetFilesInEachContainerTasks = this.getTWContainersList().map(async path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         const fileUrl = `${podUrl}${fileLocation}`;
         const metaUrl = `${fileUrl}.metadata`;
-        const [{ value: text }, { value: metadata }]: Array<{ value?: string | null }> = await allSettled([
+        console.log('loading', 'fileUrl', fileUrl, 'metaUrl', metaUrl);
+
+        const [{ value: text }, { value: metadata }]: Array<{ value?: Object | string | null }> = await allSettled([
+          // TODO: dealt with non text tiddlers, now this.processResponse will do res.text()
           solidAuthClient.fetch(fileUrl).then(this.processResponse),
-          solidAuthClient.fetch(metaUrl).then(this.processResponse),
+          this.getJSONLDFromURI(metaUrl),
         ]);
         return [text, metadata];
-      })
-    );
-    if (compact(flatten(result)).length > 0) {
-      for (let index = 0; index < result.length; index += 1) {
-        const [text, metadata] = result[index];
-        if (text && metadata) {
-          // metadata turtle to jsonLD
-          // eslint-disable-next-line no-await-in-loop
-          const metadataJsonLd = await rdfTranslator(metadata, 'n3', 'json-ld');
-          callback(undefined, { title, text, ...omit(metadataJsonLd, ['@context', '@id']) });
-          return;
+      });
+      const result: Array<Array<?Object | ?string | null>> = await Promise.all(tryGetFilesInEachContainerTasks);
+      console.log('result', result);
+
+      if (compact(flatten(result)).length > 0) {
+        for (let index = 0; index < result.length; index += 1) {
+          const [text, metadata] = result[index];
+          if (typeof text === 'string' && typeof metadata === 'object') {
+            const tiddler = { title, text, ...metadata };
+            console.log('loaded tiddler', tiddler);
+            callback(undefined, tiddler);
+            return;
+          }
         }
       }
+    } catch (error) {
+      console.error('SOLID008 loadTiddler()', title, podUrl);
     }
     callback(
       new Error(`loadTiddler() ${title} no found in all Container Path, or it don't have metadata in all Containers`)
@@ -241,7 +250,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {*} title
    * @param {*} solid
    */
-  async getJSONLDFromURI(uri: string) {
+  async getJSONLDFromURI(uri: string): Promise<Object> {
     const metadataTtl = await solidAuthClient.fetch(uri).then(this.processResponse);
     const expandedJSONLD = await rdfTranslator(metadataTtl, 'n3', 'json-ld');
     try {
