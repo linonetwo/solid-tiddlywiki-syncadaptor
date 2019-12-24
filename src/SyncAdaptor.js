@@ -166,7 +166,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
       // saveTiddler
       console.log('saving!', tiddler);
-      
+
       await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
       // saveTiddler requires tiddler.fields.title and adaptorInfo: Object.keys(tiddler.fields), and revision: sha1(tiddler.fields)
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
@@ -255,9 +255,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const expandedJSONLD = await rdfTranslator(metadataTtl, 'n3', 'json-ld');
     try {
       const compactJSONLD = await jsonld.compact(JSON.parse(expandedJSONLD), this.jsonLdContext);
-      delete compactJSONLD['@id'];
-      delete compactJSONLD['@context'];
-      return compactJSONLD;
+      return omit(compactJSONLD, ['@id', '@context']);
     } catch (error) {
       console.error('SOLID007 getJSONLDFromURI() failed', error, expandedJSONLD);
     }
