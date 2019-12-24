@@ -52,6 +52,10 @@ See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github
 
 > starting from version 5, third-party apps are untrusted by default. To trust a third-party app, before you can log in to it, you first need to go to your profile at example.com/profile/card#me (important to include the ‘#me’ there), and then hover over the ‘card’ header to reveal the context menu. From there, select the ‘A’ symbol to go to your trusted applications pane, where you can whitelist third-party apps before using them. See also solid/node-solid-server/issues/1142 about streamlining this UX flow.
 
+> You should trust `http://localhost:8080`, not `http://localhost:8080/`.
+
+![trust app in solid config](https://raw.githubusercontent.com/linonetwo/solid-tiddlywiki-syncadaptor/master/docs/img/trusted%20apps.png)
+
 ## Todo
 
 ### Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3)
