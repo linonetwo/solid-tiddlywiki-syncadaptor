@@ -14,6 +14,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   wiki: Wiki;
 
   metaContext = {
+    "@vocab": "http://schema.org/",
     dc: 'http://purl.org/dc/elements/1.1/',
     dcterms: 'http://purl.org/dc/terms/',
     schema: 'https://schema.org/',
@@ -30,6 +31,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     modified: 'schema:dateModified',
     modifier: 'schema:contributor',
     _canonical_uri: 'schema:url',
+    list: 'schema:ItemList',
   };
 
   jsonLdContext = { ...this.metaContext, ...this.keyContext };
@@ -129,6 +131,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     callback(undefined, metaDataList);
   }
 
+  // TODO: stop $:StoryList to be loaded in the first time, so previous opened tiddlers won't be overrided
   /**
    * Saves a tiddler to the server.
    * Soon executed after getStatus()
