@@ -38,9 +38,20 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
   constructor(options: { wiki: Wiki }) {
     this.wiki = options.wiki;
-    console.log('constructor');
     $tw.rootWidget.addEventListener('tm-login-solid', this.login);
+    // sync config to here
+    $tw.rootWidget.addEventListener('tm-solid-use-server-story-list', () => {
+      this.useServerStoryList = true;
+    });
+    $tw.rootWidget.addEventListener('tm-solid-not-use-server-story-list', () => {
+      this.useServerStoryList = false;
+    });
   }
+
+  // don't save story list at the beginning of opening, so we can use story list synced from the server after a while
+  useServerStoryList: boolean = true;
+
+  loadedStoryList: boolean = false;
 
   /**
    * Gets the supplemental information that the adaptor needs to keep track of for a particular tiddler. For example, the TiddlyWeb adaptor includes a bag field indicating the original bag of the tiddler.
@@ -126,8 +137,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
       }
     }
     const metaDataList = await Promise.all(getItemTasks);
-    console.log('getSkinnyTiddlers() loaded metaDataList', metaDataList);
-
     callback(undefined, metaDataList);
   }
 
@@ -151,6 +160,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
       return;
     }
+    // FEATURE: use-server-story-list prevent story list tiddler (main page) to overwrite the server side story list on the initial start up (when story list from server haven't loaded)
+    if (tiddler.fields.title === '$:/StoryList' && !this.loadedStoryList && this.useServerStoryList) {
+      callback(undefined);
+      return;
+    }
     // update file located at tiddler.fields.title
     const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
     try {
@@ -168,8 +182,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // creating ${fileUrl} use ${contentType} with metadata ${metadata}
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
       // saveTiddler
-      console.log('saving!', tiddler);
-
       await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
       // saveTiddler requires tiddler.fields.title and adaptorInfo: Object.keys(tiddler.fields), and revision: sha1(tiddler.fields)
       callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
@@ -185,15 +197,18 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {(err,tiddlerFields) => void} callback See https://tiddlywiki.com/#TiddlerFields
    */
   async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: TiddlerFields) => void) {
-    console.log('loadTiddler', title);
+    // FEATURE: use-server-story-list only load story list on the first time
+    if (title === '$:/StoryList') {
+      if (this.loadedStoryList) return callback();
+      if (!this.useServerStoryList) return callback();
+      this.loadedStoryList = true;
+    }
     const podUrl = await this.getPodUrl();
     try {
       const tryGetFilesInEachContainerTasks = this.getTWContainersList().map(async path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
         const fileUrl = `${podUrl}${fileLocation}`;
         const metaUrl = `${fileUrl}.metadata`;
-        console.log('loading', 'fileUrl', fileUrl, 'metaUrl', metaUrl);
-
         const [{ value: text }, { value: metadata }]: Array<{ value?: Object | string | null }> = await allSettled([
           // TODO: dealt with non text tiddlers, now this.processResponse will do res.text()
           solidAuthClient.fetch(fileUrl).then(this.processResponse),
@@ -202,14 +217,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
         return [text, metadata];
       });
       const result: Array<Array<?Object | ?string | null>> = await Promise.all(tryGetFilesInEachContainerTasks);
-      console.log('result', result);
 
       if (compact(flatten(result)).length > 0) {
         for (let index = 0; index < result.length; index += 1) {
           const [text, metadata] = result[index];
           if (typeof text === 'string' && typeof metadata === 'object') {
             const tiddler = { title, text, ...metadata };
-            console.log('loaded tiddler', tiddler);
             callback(undefined, tiddler);
             return;
           }

@@ -18,11 +18,23 @@ tags: [[$:/tags/ControlPanel/Saving]]
 </$reveal>
 \end
 
+\define check-use-server-story-list()
+  <$action-sendmessage $message="tm-solid-use-server-story-list" />
+\end
+
+\define uncheck-use-server-story-list()
+  <$action-sendmessage $message="tm-solid-not-use-server-story-list" />
+\end
+
 <div class="solid-card">
 
 |<<lingo Field>>|<<lingo Value>>|
 |<<lingo TWContainers>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers" tag="textarea" default="" />|
 |<<example-and-refresh-button>>|<<lingo TWContainersDescription>>|
+
+<$checkbox field="use-server-story-list" checked="yes" unchecked="no" default="yes" checkactions=<<check-use-server-story-list>> uncheckactions=<<uncheck-use-server-story-list>> >
+  <<lingo UseServerStoryList>>
+</$checkbox>
 
 </div>
 

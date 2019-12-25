@@ -5,6 +5,8 @@ Value: 值
 Description: 描述
 Example: 例子：
 
+UseServerStoryList: 使用服务端同步过来的主页
+
 TWContainers: 文件存储位置
 TWContainersDescription: 在 SoLiDPOD 上用于存放 Tiddler 的文件夹，每行一个，详见说明文档
 CurrentWebID: 当前登录的 web id ：
