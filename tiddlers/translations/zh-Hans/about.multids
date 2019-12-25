@@ -1,3 +1,4 @@
 title: $:/language/ControlPanel/Saving/SoLiD/About
 
+BriefAboutThisPlugin: 本插件提供了一个[[数据同步适配器|https://tiddlywiki.com/dev/#SyncAdaptorModules]]模块，可以把本地的变更细粒度地同步到您的 [[Solid Pod|https://github.com/solid/node-solid-server]] 上.
 GoToControlPanel: 点击打开设置页面

@@ -1,0 +1,18 @@
+title: $:/language/ControlPanel/Saving/SoLiD/Config
+
+Field: Field
+Value: Value
+Description: Description
+Example: Example
+
+UseServerStoryList: Use StoryList Synced From Server
+
+TWContainers: SoLiD Container URIs to store files
+TWContainersDescription: Folders on SoLiDPOD to store Tiddlers, one each line, read the doc for details
+CurrentWebID: Current user WebID
+CurrentWebIDDescription: TiddlyWiki will sync with this WebID's POD, if network is good
+Refresh: Refresh Manually
+
+Login: Open SoLiD login window
+CantLogin: You should fill in TWContainers first to login
+Logout: Logout

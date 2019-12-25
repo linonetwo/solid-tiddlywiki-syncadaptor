@@ -1,0 +1,4 @@
+title: $:/language/ControlPanel/Saving/SoLiD/About
+
+BriefAboutThisPlugin: This plugin provides a [[syncadaptor|https://tiddlywiki.com/dev/#SyncAdaptorModules]] module that saves fine-grained changes to a [[Solid Pod|https://github.com/solid/node-solid-server]] server.
+GoToControlPanel: Click To Open Config
