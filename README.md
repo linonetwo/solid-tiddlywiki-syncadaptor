@@ -66,6 +66,16 @@ StoryList is the ordering of main page tiddlers, if you check the `UseServerStor
 
 ## Todo
 
+### Speed up loading
+
+Currently, `loadSkinnyTiddlers()` will load tons of metadata file at the start up, which is resource consuming.
+
+![loadSkinnyTiddlers loading metadata files from SoLiD POD](https://raw.githubusercontent.com/linonetwo/solid-tiddlywiki-syncadaptor/master/docs/diagrams/getSkinnyTiddlers.png)
+
+We might use a corn job to group all metadata file into a single file, so the loading will speed up.
+
+Or we can [ask Node SoLiD Server to support HTTP2](https://github.com/solid/node-solid-server/issues/1379).
+
 ### Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3)
 
 ### Collaborating should consider diff and conflict
