@@ -4,7 +4,7 @@ type: text/vnd.tiddlywiki
 
 \define lingo-base() $:/language/ControlPanel/Saving/SoLiD/About
 
-This plugin provides a [[syncadaptor|https://tiddlywiki.com/dev/#SyncAdaptorModules]] module for saving changes on a [[Solid Pod|https://github.com/solid/node-solid-server]] server.
+<<lingo BriefAboutThisPlugin>>
 
 [[github.com/linonetwo/solid-tiddlywiki-syncadaptor|https://github.com/linonetwo/solid-tiddlywiki-syncadaptor]]
 

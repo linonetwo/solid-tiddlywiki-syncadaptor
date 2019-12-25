@@ -111,9 +111,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
   async getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
     const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
     if (isLoggedIn !== 'yes') {
+      console.warn('SOLID009 can\'t getSkinnyTiddlers while not logged in, navigate to plugin about page');
+      $tw.rootWidget.dispatchEvent({
+        type: 'tm-navigate',
+        navigateTo: '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about',
+      });
       callback(undefined, []);
-      console.warn('cant getSkinnyTiddlers while not logged in');
-      // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
       return;
     }
     /*
@@ -128,6 +131,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const containerURI = containerTtlFiles[0];
     // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
     const items = ldflex[`${containerURI}/`]['ldp:contains'];
+    // task array for Promise.all, read all files concurrently
     const getItemTasks: Promise<Object>[] = [];
     for await (const item of items) {
       // get all metadata files
