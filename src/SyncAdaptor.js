@@ -111,11 +111,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
   async getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
     const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
     if (isLoggedIn !== 'yes') {
-      console.warn('SOLID009 can\'t getSkinnyTiddlers while not logged in, navigate to plugin about page');
-      $tw.rootWidget.dispatchEvent({
-        type: 'tm-navigate',
-        navigateTo: '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about',
-      });
+      this.navigateToLogin();
       callback(undefined, []);
       return;
     }
@@ -144,7 +140,6 @@ class SoLiDTiddlyWikiSyncAdaptor {
     callback(undefined, metaDataList);
   }
 
-  // TODO: stop $:StoryList to be loaded in the first time, so previous opened tiddlers won't be overrided
   /**
    * Saves a tiddler to the server.
    * Soon executed after getStatus()
@@ -158,10 +153,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
   ) {
     const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
     if (isLoggedIn !== 'yes') {
-      // callback(new Error('cant save while not logged in'));
-      console.warn('cant save while not logged in');
+      this.navigateToLogin();
       callback(undefined);
-      // TODO: this function get called even not logged in, maybe pop up something friendly only once to notify user?
       return;
     }
     // FEATURE: use-server-story-list prevent story list tiddler (main page) to overwrite the server side story list on the initial start up (when story list from server haven't loaded)
@@ -422,6 +415,14 @@ class SoLiDTiddlyWikiSyncAdaptor {
         throw new Error(`SOLID004 createFileOrFolder() creating ${url} failed with ${error}`);
       }
     }
+  }
+
+  navigateToLogin() {
+    console.warn("SOLID009 can't getSkinnyTiddlers or save while not logged in, navigate to plugin about page");
+    $tw.rootWidget.dispatchEvent({
+      type: 'tm-navigate',
+      navigateTo: '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about',
+    });
   }
 
   processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
