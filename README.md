@@ -74,6 +74,8 @@ Currently, `loadSkinnyTiddlers()` will load tons of metadata file at the start u
 
 We might use a corn job to group all metadata file into a single file, so the loading will speed up.
 
+Or we can use a single metadata file, and use PATCH to update it in small grain.
+
 Or we can [ask Node SoLiD Server to support HTTP2](https://github.com/solid/node-solid-server/issues/1379).
 
 ### Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3)
