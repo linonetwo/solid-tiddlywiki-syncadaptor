@@ -56,6 +56,14 @@ See [github.com/solid/node-solid-server#upgrading-from-version-4](https://github
 
 ![trust app in solid config](https://raw.githubusercontent.com/linonetwo/solid-tiddlywiki-syncadaptor/master/docs/img/trusted%20apps.png)
 
+## Syncing
+
+### StoryList
+
+StoryList is the ordering of main page tiddlers, if you check the `UseServerStoryList` checkbox in the config, then on startup, tiddler wiki will load StoryList from the server, restore previous session.
+
+![UML of StoryList loading](https://raw.githubusercontent.com/linonetwo/solid-tiddlywiki-syncadaptor/master/docs/diagrams/useServerSideStoryList.png)
+
 ## Todo
 
 ### Full text search on SoLiD POD is currently impossible, and is [hard on TW](https://github.com/rsc/tiddly/issues/3)
