@@ -66,6 +66,12 @@ StoryList is the ordering of main page tiddlers, if you check the `UseServerStor
 
 ## Todo
 
+### Local RDF translate
+
+Currently, we translate tiddlywiki metadata from JSON to JSON-LD using a context at the beginning of `SyncAdaptor.js`, and translate JSON-LD to Turtle (n3) using `rdf-translator` npm package, which will send POST request to a web service of [alexstolz/rdf-translator](https://bitbucket.org/alexstolz/rdf-translator) which is written in python, which make it unable to work on local mode (save to a localhost SoLiD POD without internet access).
+
+We can use rdflib to translate RDF, after [its issue](https://github.com/linkeddata/rdflib.js/issues/364) is solved.
+
 ### Speed up loading
 
 Currently, `loadSkinnyTiddlers()` will load tons of metadata file at the start up, which is resource consuming.
