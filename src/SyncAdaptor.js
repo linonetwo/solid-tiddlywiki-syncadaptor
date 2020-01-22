@@ -243,7 +243,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
     const { fileLocation } = this.getTiddlerContainerPath(title, tiddlerInfo.solid);
     try {
       // delete and recreate
-      await solidAuthClient.fetch(`${await this.getPodUrl()}${fileLocation}`, { method: 'DELETE' });
+      const fileURI = `${await this.getPodUrl()}${fileLocation}`;
+      await Promise.all([
+        solidAuthClient.fetch(fileURI, { method: 'DELETE' }),
+        solidAuthClient.fetch(`${fileURI}.metadata`, { method: 'DELETE' }),
+      ]);
       callback(undefined);
     } catch (error) {
       callback(error);
