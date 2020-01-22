@@ -30,6 +30,7 @@ tags: [[$:/tags/ControlPanel/Saving]]
 
 |<<lingo Field>>|<<lingo Value>>|
 |<<lingo TWContainers>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers" tag="textarea" default="" />|
+|<<lingo TWReadableContainers>>| <$edit-text class="solid-input solid-textarea" tiddler="$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWReadableContainers" tag="textarea" default="" />|
 |<<example-and-refresh-button>>|<<lingo TWContainersDescription>>|
 
 <$checkbox field="use-server-story-list" checked="yes" unchecked="no" default="yes" checkactions=<<check-use-server-story-list>> uncheckactions=<<uncheck-use-server-story-list>> >

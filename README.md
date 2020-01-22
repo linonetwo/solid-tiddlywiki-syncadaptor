@@ -66,6 +66,10 @@ StoryList is the ordering of main page tiddlers, if you check the `UseServerStor
 
 ## Todo
 
+### Readonly POD
+
+We can specific a POD to load tiddlers, even wiki user may visit without write permission. In this way, we can let TiddlyWiki be a public blog. Visitors can open your site, and read things in you public POD.
+
 ### SWR
 
 `stale-while-revalidate` is a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).

@@ -65,7 +65,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
       this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid)
     );
     return {
-      solid: this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid).containerPath,
+      solid: this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid).fileLocation,
     };
   }
 
@@ -124,20 +124,22 @@ class SoLiDTiddlyWikiSyncAdaptor {
     */
 
     const containerTtlFiles = await this.getTWContainersOnPOD();
-    const containerURI = containerTtlFiles[0];
-    // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
-    const items = ldflex[`${containerURI}/`]['ldp:contains'];
-    // task array for Promise.all, read all files concurrently
-    const getItemTasks: Promise<Object>[] = [];
-    for await (const item of items) {
-      // get all metadata files
-      const fileURI = String(item);
-      if (fileURI.endsWith('.metadata')) {
-        getItemTasks.push(this.getJSONLDFromURI(fileURI));
+    const getAllItemTasks = containerTtlFiles.map(async containerURI => {
+      const items = ldflex[`${containerURI}/`]['ldp:contains'];
+      // task array for Promise.all, read all files concurrently
+      const getItemTasks: Promise<Object>[] = [];
+      for await (const item of items) {
+        // get all metadata files
+        const fileURI = String(item);
+        if (fileURI.endsWith('.metadata')) {
+          getItemTasks.push(this.getJSONLDFromURI(fileURI));
+        }
       }
-    }
-    const metaDataList = await Promise.all(getItemTasks);
-    callback(undefined, metaDataList);
+      return Promise.all(getItemTasks);
+    });
+    // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
+    const metaDataList = await Promise.all(getAllItemTasks);
+    callback(undefined, flatten(metaDataList));
   }
 
   /**
@@ -163,27 +165,28 @@ class SoLiDTiddlyWikiSyncAdaptor {
       return;
     }
     // update file located at tiddler.fields.title
-    const { fileLocation, containerPath } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
+    let { fileLocation } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
+    if (!fileLocation.startsWith('http')) {
+      fileLocation = `${await this.getPodUrl()}/${fileLocation}`
+    }
     try {
-      const podUrl = await this.getPodUrl();
-      const fileUrl = `${podUrl}${fileLocation}`;
       // use PUT to override or create
       // make metadata json-ld, then convert to turtle
       // try this in https://runkit.com/linonetwo/5cd54c8a0a18bf001b479c2a
       const metadataJsonLd = omit(tiddler.fields, ['text']);
       metadataJsonLd['@context'] = this.jsonLdContext;
       // TODO: relative URI is buggy https://bitbucket.org/alexstolz/rdf-translator/issues/7/handle-relative-uri , so not using relative url here, instead, use full url
-      metadataJsonLd['@id'] = fileUrl;
+      metadataJsonLd['@id'] = fileLocation;
       // rdf Translate from json-ld to n3
       const metadata: string = await rdfTranslator(JSON.stringify(metadataJsonLd), 'json-ld', 'n3');
-      // creating ${fileUrl} use ${contentType} with metadata ${metadata}
+      // creating ${fileLocation} use ${contentType} with metadata ${metadata}
       const contentType = tiddler.fields.type || 'text/vnd.tiddlywiki';
       // saveTiddler
-      await this.createFileOrFolder(fileUrl, contentType, tiddler.fields.text, metadata);
+      await this.createFileOrFolder(fileLocation, contentType, tiddler.fields.text, metadata);
       // saveTiddler requires tiddler.fields.title and adaptorInfo: Object.keys(tiddler.fields), and revision: sha1(tiddler.fields)
-      callback(undefined, { solid: containerPath }, sha1(tiddler.fields));
+      callback(undefined, { solid: fileLocation }, sha1(tiddler.fields));
     } catch (error) {
-      callback(error, { solid: containerPath }, sha1(tiddler.fields));
+      callback(error, { solid: fileLocation }, sha1(tiddler.fields));
       console.error(error);
       throw new Error(`SOLID005 saveTiddler() ${error}`);
     }
@@ -204,7 +207,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     try {
       const tryGetFilesInEachContainerTasks = this.getTWContainersList().map(async path => {
         const { fileLocation } = this.getTiddlerContainerPath(title, path);
-        const fileUrl = `${podUrl}${fileLocation}`;
+        const fileUrl = fileLocation.startsWith('http') ? fileLocation : `${podUrl}${fileLocation}`;
         const metaUrl = `${fileUrl}.metadata`;
         const [{ value: text }, { value: metadata }]: Array<{ value?: Object | string | null }> = await allSettled([
           // TODO: dealt with non text tiddlers, now this.processResponse will do res.text()
@@ -297,17 +300,25 @@ class SoLiDTiddlyWikiSyncAdaptor {
   /**
    * get containers list and guard to check it exists
    * @returns an array with at least one string, or it will throw
+   * @param forceWriteable boolean When set to true, it will check if "TWContainers" field in the Config is filled, so we have place to write data.
    */
-  getTWContainersList() {
-    const containerPathsString = this.wiki.getTiddlerText(
-      '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers'
-    );
-    if (!containerPathsString) {
-      throw new Error('SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()');
-    }
-    const containerPaths: Array<string> = compact(containerPathsString.split('\n'));
-    if (!containerPaths.length === 0) {
-      throw new Error('SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()');
+  getTWContainersList(forceWriteable: boolean = false) {
+    const containerPathsString: string =
+      this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWContainers') || '';
+    const readableContainerPathsString: string =
+      this.wiki.getTiddlerText('$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/TWReadableContainers') || '';
+    let containerPaths: Array<string> = compact(containerPathsString.split('\n'));
+    if (forceWriteable) {
+      if (!containerPathsString) {
+        throw new Error(
+          'SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()'
+        );
+      }
+      if (!containerPaths.length === 0) {
+        throw new Error(
+          'SOLID000 getTWContainersList() get called while Containers textarea is unfilled, abort login()'
+        );
+      }
     }
     // currently Node Solid Server supports following root location
     if (
@@ -327,6 +338,21 @@ class SoLiDTiddlyWikiSyncAdaptor {
         )}`
       );
     }
+    // add readable location, which are full URIs to some PODs
+    let readableContainerPaths: string[] = [];
+    if (readableContainerPathsString) {
+      readableContainerPaths = compact(readableContainerPathsString.split('\n'));
+      if (!readableContainerPaths.every(path => path.startsWith('https://'))) {
+        throw new Error(
+          `SOLID001 getTWContainersList() get called, but some ReadableContainers is invalid ${JSON.stringify(
+            readableContainerPaths,
+            null,
+            '  '
+          )}`
+        );
+      }
+    }
+    containerPaths = [...containerPaths, ...readableContainerPaths];
     return containerPaths;
   }
 
@@ -356,7 +382,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     // collect info to build URL of containers
     const podUrl = await this.getPodUrl();
     const containerPaths = this.getTWContainersList();
-    const containerURIs = containerPaths.map(path => `${podUrl}${path}`);
+    const containerURIs = containerPaths.map(path => (path.startsWith('http') ? path : `${podUrl}${path}`));
     return containerURIs;
   }
 
