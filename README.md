@@ -66,6 +66,14 @@ StoryList is the ordering of main page tiddlers, if you check the `UseServerStor
 
 ## Todo
 
+### SWR
+
+`stale-while-revalidate` is a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
+
+We only load the metadata of all tiddlers (metadata are also called "skinnytiddlers") at the startup. We then fetch content of all tiddlers from new to old, if "pre-cashing" option is opened in the config.
+
+This pre-fetching will progressively download content using a queue. It will do it quick for the first time, but slower for subsequent fetching.
+
 ### Local RDF translate
 
 Currently, we translate tiddlywiki metadata from JSON to JSON-LD using a context at the beginning of `SyncAdaptor.js`, and translate JSON-LD to Turtle (n3) using `rdf-translator` npm package, which will send POST request to a web service of [alexstolz/rdf-translator](https://bitbucket.org/alexstolz/rdf-translator) which is written in python, which make it unable to work on local mode (save to a localhost SoLiD POD without internet access).
