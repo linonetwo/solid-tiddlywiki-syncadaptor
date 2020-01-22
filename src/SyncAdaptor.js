@@ -7,6 +7,7 @@ import jsonld from 'jsonld';
 import { compact, flatten, omit } from 'lodash';
 import allSettled from 'promise.allsettled';
 import ldflex from '@solid/query-ldflex';
+import { some as somePromise } from 'bluebird';
 
 import { type SoLiDSession } from './SoLiDSessionType';
 
@@ -167,7 +168,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     // update file located at tiddler.fields.title
     let { fileLocation } = this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid);
     if (!fileLocation.startsWith('http')) {
-      fileLocation = `${await this.getPodUrl()}/${fileLocation}`
+      fileLocation = `${await this.getPodUrl()}/${fileLocation}`;
     }
     try {
       // use PUT to override or create
@@ -214,9 +215,12 @@ class SoLiDTiddlyWikiSyncAdaptor {
           solidAuthClient.fetch(fileUrl).then(this.processResponse),
           this.getJSONLDFromURI(metaUrl),
         ]);
+        if (typeof text !== 'string' || typeof metadata !== 'object') {
+          throw new Error();
+        }
         return [text, metadata];
       });
-      const result: Array<Array<?Object | ?string | null>> = await Promise.all(tryGetFilesInEachContainerTasks);
+      const result: Array<Array<?Object | ?string | null>> = await somePromise(tryGetFilesInEachContainerTasks, 1);
 
       if (compact(flatten(result)).length > 0) {
         for (let index = 0; index < result.length; index += 1) {
@@ -229,7 +233,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
         }
       }
     } catch (error) {
-      console.error('SOLID008 loadTiddler()', title, podUrl);
+      console.error('SOLID008 loadTiddler()', title, podUrl, error);
     }
     callback(
       new Error(`loadTiddler() ${title} no found in all Container Path, or it don't have metadata in all Containers`)
@@ -460,7 +464,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     });
   }
 
-  processResponse = (res: Response) => (res.status === 200 ? res.text() : null);
+  processResponse = (res: Response) => (res.status === 200 ? res.text() : Promise.reject(res.status));
 }
 
 // only run this on the browser
