@@ -342,7 +342,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
     }
 
     // try access files
-    const podUrl = `${currentWebIdURL.protocol}//${currentWebIdURL.hostname}`;
+    const port = currentWebIdURL.port && currentWebIdURL.port !== 80 ? `:${currentWebIdURL.port}` : '';
+    const podUrl = `${currentWebIdURL.protocol}//${currentWebIdURL.hostname}${port}`;
     return podUrl;
   }
 
@@ -383,11 +384,15 @@ class SoLiDTiddlyWikiSyncAdaptor {
       // handling errors
       // check it's 201 Created
       if (creationResponse.statusText === 'Origin Unauthorized') {
-        throw new Error(
-          `You need to trust ${
+        throw new Error(`
+          You need to trust ${
             typeof window !== 'undefined' ? window.location.origin : ' this app'
-          } in SoLiD Panel. See https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#if-you-can-not-access-private-resources`
-        );
+          } in SoLiD Panel. See https://github.com/linonetwo/solid-tiddlywiki-syncadaptor#if-you-can-not-access-private-resources
+
+          Please goto YourWebID > Preferences > Manage your trusted applications, and add ${
+            window.location.origin
+          } to the list, give it Write and Append permissions.
+          `);
       }
       if (creationResponse.status !== 201) {
         throw new Error(`${creationResponse.status}, ${creationResponse.statusText}`);
