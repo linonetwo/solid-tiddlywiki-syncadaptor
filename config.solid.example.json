@@ -1,0 +1,21 @@
+{
+  "port": "8443",
+  "serverUri": "https://localhost:8443",
+  "webid": true,
+  "mount": "/",
+  "@comment": "path is relative to $projectRoot/solid/",
+  "configPath": "./config",
+  "configFile": "../config.solid.example.json",
+  "dbPath": "./.db",
+  "sslKey": "../keys/localhost+2-key.pem",
+  "sslCert": "../keys/localhost+2.pem",
+  "multiuser": true,
+  "enforceToc": false,
+  "disablePasswordChecks": true,
+  "supportEmail": "",
+  "server": {
+    "name": "localhost",
+    "description": "",
+    "logo": ""
+  }
+}

@@ -106,6 +106,16 @@ Will init a local tiddler wiki and copy all tiddlers to the `plugins` folder ins
 
 Will compile JS and copy JS bundle to the `plugins` folder, on you save the JS file. A reload of wiki server will be performed to serve the new JS bundle.
 
+### Local SoLiD Server
+
+Install `mkcert` first, then use `npm run generate-keys` to generate key that SoLiD server needs for https. It will add `tiddlywiki.localhost` to the key chain, so you need to register a WebID with name `tiddlywiki`.
+
+Run `npm run start:solid` to start a local test server, you can register WebID here: [https://localhost:8443](https://localhost:8443)
+
+Then add `127.0.0.1    tiddlywiki.localhost` to `/etc/hosts`, other wise you will not be able to open [https://tiddlywiki.localhost:8443](https://tiddlywiki.localhost:8443).
+
+Finally, you can put your localhost WebID `https://tiddlywiki.localhost:8443` after click the syncAdaptor config login button.
+
 ### References
 
 #### Comunica

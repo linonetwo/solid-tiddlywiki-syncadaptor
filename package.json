@@ -6,6 +6,8 @@
   "scripts": {
     "start": "npm run clean && tiddlywiki demo-wiki --init server && npm run copy:mkdir && npm run copy:tiddly && npm run copy:js && npm run serve",
     "dev": "concurrently \"npm run dev:build\" \"nodemon --watch ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js --exec 'npm run serve'\" ",
+    "start:solid": "mkdir -p ./solid && cd ./solid && NODE_EXTRA_CA_CERTS=\"$(mkcert -CAROOT)/rootCA.pem\" DEBUG=solid:* solid start --root $(pwd)/data --config-file $(pwd)/../config.solid.example.json --multiuser",
+    "generate-keys": "mkdir -p ./keys && cd ./keys && mkcert localhost tiddlywiki.localhost 127.0.0.1",
     "serve": "tiddlywiki demo-wiki --listen host=localhost",
     "dev:build": "NODE_ENV=development webpack --watch --mode development -o ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js",
     "copy:mkdir": "mkdir ./demo-wiki/tiddlers && mkdir -p ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor",
@@ -74,6 +76,7 @@
     "nodemon": "2.0.2",
     "prettier-eslint-cli": "5.0.0",
     "rimraf": "3.0.0",
+    "solid-server": "^5.2.2",
     "tiddlywiki": "5.1.21",
     "webpack": "4.41.4",
     "webpack-cli": "3.3.10"
