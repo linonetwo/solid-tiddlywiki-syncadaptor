@@ -139,13 +139,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       }
       return Promise.all(getItemTasks);
     });
-    getAllItemTasks.forEach(async (task) => {
+    getAllItemTasks.forEach(async task => {
       const metaDataList = await task;
       // preFetch content
       metaDataList.map(({ title }) => this.enqueuePreFetch(title));
       // load metadata
       callback(undefined, metaDataList);
-    })
+    });
   }
 
   /**
@@ -165,6 +165,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
       callback(undefined);
       return;
     }
+    // update cache
+    localStorage.setItem(`tiddlerCache://${tiddler.fields.title}`, JSON.stringify(tiddler.fields));
     // FEATURE: use-server-story-list prevent story list tiddler (main page) to overwrite the server side story list on the initial start up (when story list from server haven't loaded)
     if (tiddler.fields.title === '$:/StoryList' && !this.loadedStoryList && this.useServerStoryList) {
       callback(undefined);
@@ -251,6 +253,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {Object} tiddlerInfo The tiddlerInfo maintained by the syncer.getTiddlerInfo() for this tiddler
    */
   async deleteTiddler(title: string, callback: (error?: Error) => void, tiddlerInfo: Object) {
+    // delete cache
+    localStorage.removeItem(`tiddlerCache://${title}`);
     // delete file located at title, title itself is a path
     const { fileLocation } = this.getTiddlerContainerPath(title, tiddlerInfo.solid);
     try {
