@@ -126,6 +126,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
 
     const containerTtlFiles = await this.getTWContainersOnPOD();
     const getAllItemTasks: Promise<TiddlerFields[]>[] = containerTtlFiles.map(async containerURI => {
+      // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
       const items = ldflex[`${containerURI}/`]['ldp:contains'];
       // task array for Promise.all, read all files concurrently
       const getItemTasks: Promise<TiddlerFields>[] = [];
@@ -138,12 +139,13 @@ class SoLiDTiddlyWikiSyncAdaptor {
       }
       return Promise.all(getItemTasks);
     });
-    // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
-    const metaDataList = flatten(await Promise.all(getAllItemTasks));
-    // preFetch content
-    metaDataList.map(({ title }) => this.enqueuePreFetch(title));
-
-    callback(undefined, metaDataList);
+    getAllItemTasks.forEach(async (task) => {
+      const metaDataList = await task;
+      // preFetch content
+      metaDataList.map(({ title }) => this.enqueuePreFetch(title));
+      // load metadata
+      callback(undefined, metaDataList);
+    })
   }
 
   /**
