@@ -167,7 +167,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
     }
     // update cache
     localStorage.setItem(`tiddlerCache://${tiddler.fields.title}`, JSON.stringify(tiddler.fields));
-    // FEATURE: use-server-story-list prevent story list tiddler (main page) to overwrite the server side story list on the initial start up (when story list from server haven't loaded)
+    // use-server-story-list prevent story list tiddler (main page) to overwrite the server side story list on the initial start up (when story list from server haven't loaded)
     if (tiddler.fields.title === '$:/StoryList' && !this.loadedStoryList && this.useServerStoryList) {
       callback(undefined);
       return;
@@ -205,7 +205,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param {(err,tiddlerFields) => void} callback See https://tiddlywiki.com/#TiddlerFields
    */
   async loadTiddler(title: string, callback: (error?: Error, tiddlerFields?: TiddlerFields) => void) {
-    // FEATURE: use-server-story-list only load story list on the first time
+    // use-server-story-list only load story list on the first time
     if (title === '$:/StoryList') {
       if (this.loadedStoryList) return callback();
       if (!this.useServerStoryList) return callback();

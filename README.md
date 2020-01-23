@@ -14,18 +14,6 @@ SoLiD POD (Person Owned Data) is a great place to store TiddlyWiki Tiddlers (exe
 
 Only user modified tiddlers will be synced to the SoLiD POD, likes `$:/StoryList` and other user created tiddlers.
 
-## Privacy
-
-### Share with certain friends
-
-SoLiD have `/public` and `/inbox` (or `/private`), file on `/inbox` folder (which is a private container) is invisible to anyone not in your Web Access Control List, normally this ACL file is located in `/private/tiddlywiki/.acl` (?), if you choose to place some your tiddlers inside `/private/tiddlywiki`. You can change this ACL file using SoLiD's data browser web page, or using other SoLiD Apps, to share some tiddler with limited friends.
-
-### Set a tiddler private
-
-You can set a tiddler belongs to a container use `solid-sync` tiddler field, for example, `solid-sync: /private/tiddlywiki/main`. If this tiddler field is unset, this sync adaptor will assign one for it, by default the first one in the `$:/ControlPanel/Saving`'s TWContainers field.
-
-`solid-sync` field accepts string or **array**, so you can assign a tiddler to more than one container, for example one container for draft, one container for publish.
-
 ### Data structure
 
 This sync adapter will create some folders (containers) to store your tiddlers, each container is actually a web page with RDF inside, representing an array of `SkinnyTiddlers` (`SkinnyTiddlers` is used by [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), describing what tiddlers you have in the backend, with all metadata of those tiddlers, without text of those tiddlers).
@@ -79,6 +67,16 @@ We only load the metadata of all tiddlers (metadata are also called "skinnytiddl
 This pre-fetching will progressively download content using a queue. It will do it quick for the first time, but slower for subsequent fetching.
 
 ## Todo
+
+### Share with certain friends
+
+SoLiD have `/public` and `/inbox` (or `/private`), file on `/inbox` folder (which is a private container) is invisible to anyone not in your Web Access Control List, normally this ACL file is located in `/private/tiddlywiki/.acl` (?), if you choose to place some your tiddlers inside `/private/tiddlywiki`. You can change this ACL file using SoLiD's data browser web page, or using other SoLiD Apps, to share some tiddler with limited friends.
+
+### Set a tiddler private
+
+You can set a tiddler belongs to a container use `solid-sync` tiddler field, for example, `solid-sync: /private/tiddlywiki/main`. If this tiddler field is unset, this sync adaptor will assign one for it, by default the first one in the `$:/ControlPanel/Saving`'s TWContainers field.
+
+`solid-sync` field accepts string or **array**, so you can assign a tiddler to more than one container, for example one container for draft, one container for publish.
 
 ### Local RDF translate
 
