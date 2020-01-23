@@ -47,6 +47,8 @@ class SoLiDTiddlyWikiSyncAdaptor {
     $tw.rootWidget.addEventListener('tm-solid-not-use-server-story-list', () => {
       this.useServerStoryList = false;
     });
+
+    this.startPreFetchFromQueue();
   }
 
   // don't save story list at the beginning of opening, so we can use story list synced from the server after a while
@@ -60,13 +62,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * @param tiddler Target tiddler
    */
   getTiddlerInfo(tiddler: Tiddler) {
-    console.log(
-      'getTiddlerInfo',
-      tiddler.fields.title,
-      this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid)
-    );
     return {
-      solid: this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.solid).fileLocation,
+      solid:
+        tiddler.fields.creator &&
+        this.getTiddlerContainerPath(tiddler.fields.title, tiddler.fields.creator.replace('profile/card#me', ''))
+          .fileLocation,
     };
   }
 
@@ -109,7 +109,7 @@ class SoLiDTiddlyWikiSyncAdaptor {
    * This method is optional. If an adaptor doesn't implement it then synchronisation will be unidirectional from the TiddlyWiki store to the adaptor, but not the other way.
    * get called here https://github.com/Jermolene/TiddlyWiki5/blob/07198b9cda12da82fc66dcf0589d6a9caab1cdf6/core/modules/syncer.js#L208
    */
-  async getSkinnyTiddlers(callback: (error?: Error, tiddlers: Tiddler[]) => void) {
+  async getSkinnyTiddlers(callback: (error?: Error, tiddlers: TiddlerFields[]) => void) {
     const isLoggedIn = this.wiki.getTiddlerText('$:/status/IsLoggedIn');
     if (isLoggedIn !== 'yes') {
       this.navigateToLogin();
@@ -125,10 +125,10 @@ class SoLiDTiddlyWikiSyncAdaptor {
     */
 
     const containerTtlFiles = await this.getTWContainersOnPOD();
-    const getAllItemTasks = containerTtlFiles.map(async containerURI => {
+    const getAllItemTasks: Promise<TiddlerFields[]>[] = containerTtlFiles.map(async containerURI => {
       const items = ldflex[`${containerURI}/`]['ldp:contains'];
       // task array for Promise.all, read all files concurrently
-      const getItemTasks: Promise<Object>[] = [];
+      const getItemTasks: Promise<TiddlerFields>[] = [];
       for await (const item of items) {
         // get all metadata files
         const fileURI = String(item);
@@ -139,8 +139,11 @@ class SoLiDTiddlyWikiSyncAdaptor {
       return Promise.all(getItemTasks);
     });
     // need trailing slash https://forum.solidproject.org/t/ls-ldp-container-using-ldflex/2522/2
-    const metaDataList = await Promise.all(getAllItemTasks);
-    callback(undefined, flatten(metaDataList));
+    const metaDataList = flatten(await Promise.all(getAllItemTasks));
+    // preFetch content
+    metaDataList.map(({ title }) => this.enqueuePreFetch(title));
+
+    callback(undefined, metaDataList);
   }
 
   /**
@@ -461,6 +464,39 @@ class SoLiDTiddlyWikiSyncAdaptor {
     $tw.rootWidget.dispatchEvent({
       type: 'tm-navigate',
       navigateTo: '$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about',
+    });
+  }
+
+  preFetchQueue = [];
+
+  preFetchDeduplicationSet = new Set<string>();
+
+  enqueuePreFetch(title: string) {
+    if (!this.preFetchDeduplicationSet.has(title)) {
+      this.preFetchQueue.push(title);
+    }
+  }
+
+  startPreFetchFromQueue() {
+    setInterval(async () => {
+      if (this.preFetchQueue.length > 0) {
+        const title = this.preFetchQueue.pop();
+        await this.swrFetchTiddler(title);
+        this.preFetchDeduplicationSet.delete(title);
+      }
+    }, Math.random() * 100);
+  }
+
+  async swrFetchTiddler(title: string) {
+    const cachedTiddler = localStorage.getItem(`tiddlerCache://${title}`);
+    if (typeof cachedTiddler === 'string') {
+      $tw.syncer.storeTiddler(JSON.parse(cachedTiddler));
+    }
+    this.loadTiddler(title, (error, tiddlerFields) => {
+      if (!error && typeof tiddlerFields === 'object') {
+        $tw.syncer.storeTiddler(tiddlerFields);
+        localStorage.setItem(`tiddlerCache://${title}`, JSON.stringify(tiddlerFields));
+      }
     });
   }
 

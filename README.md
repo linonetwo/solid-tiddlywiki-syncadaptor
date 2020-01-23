@@ -64,19 +64,21 @@ StoryList is the ordering of main page tiddlers, if you check the `UseServerStor
 
 ![UML of StoryList loading](https://raw.githubusercontent.com/linonetwo/solid-tiddlywiki-syncadaptor/master/docs/diagrams/useServerSideStoryList.png)
 
-## Todo
+## More Feature
 
 ### Readonly POD
 
 We can specific a POD to load tiddlers, even wiki user may visit without write permission. In this way, we can let TiddlyWiki be a public blog. Visitors can open your site, and read things in you public POD.
 
-### SWR
+### SWR PreFetch Content
 
 `stale-while-revalidate` is a cache invalidation strategy popularized by [HTTP RFC 5861](https://tools.ietf.org/html/rfc5861).
 
 We only load the metadata of all tiddlers (metadata are also called "skinnytiddlers") at the startup. We then fetch content of all tiddlers from new to old, if "pre-cashing" option is opened in the config.
 
 This pre-fetching will progressively download content using a queue. It will do it quick for the first time, but slower for subsequent fetching.
+
+## Todo
 
 ### Local RDF translate
 
