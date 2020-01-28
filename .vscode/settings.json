@@ -3,7 +3,8 @@
   "todo-tree.excludeGlobs": ["**/demo-wiki/**", "**/flow-typed/**", "**/node_modules/**", "**/dist/**"],
   "javascript.validate.enable": false,
   "cSpell.words": [
-    "allsettled"
+    "allsettled",
+    "caroot"
   ],
   "cSpell.enabledLanguageIds": [
     "asciidoc",

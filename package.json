@@ -1,6 +1,6 @@
 {
   "name": "solid-tiddlywiki-syncadaptor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Another attempt to make tiddlywiki a frontend for SoLiD Server.",
   "main": "index.js",
   "scripts": {
@@ -13,10 +13,13 @@
     "copy:mkdir": "mkdir ./demo-wiki/tiddlers && mkdir -p ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor",
     "copy:tiddly": "cp -a ./tiddlers/. ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor && node ./scripts/addToPluginList.js && node ./scripts/createDefaultTiddlers.js",
     "copy:js": "npm run build && cp ./dist/SyncAdaptor.js ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js && cp ./src/SyncAdaptor.js.meta ./demo-wiki/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js.meta",
+    "publish:copy:js": "mv ./dist/SyncAdaptor.js ./dist/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js && cp ./src/SyncAdaptor.js.meta ./dist/plugins/solid-tiddlywiki-syncadaptor/SyncAdaptor.js.meta",
+    "publish:copy:tiddly": "cp -a ./tiddlers/. ./dist/plugins/solid-tiddlywiki-syncadaptor",
+    "publish:copy:mkdir": "mkdir -p ./dist/plugins/solid-tiddlywiki-syncadaptor",
     "clean": "rimraf ./dist ./demo-wiki",
     "build": "NODE_ENV=production webpack --mode production",
     "installTyping": "flow-typed install",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublish": "npm run clean && npm run build && npm run publish:copy:mkdir && npm run publish:copy:js && npm run publish:copy:tiddly"
   },
   "repository": {
     "type": "git",

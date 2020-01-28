@@ -10,6 +10,13 @@ Another attempt to make tiddlywiki a frontend for SoLiD Server.
 
 SoLiD POD (Person Owned Data) is a great place to store TiddlyWiki Tiddlers (executable Note with metadata). By using this [SyncAdaptor](https://tiddlywiki.com/dev/#Syncadaptor), you can sync TiddlyWiki data between mobile phone and computer, enable partial wiki sharing (sharing only a part of your wiki), collaborating (by allowing your friends write to your SoLiD POD).
 
+## Library usage
+
+You have to config you wiki to use this plugin by your self:
+
+1. Add `solid-tiddlywiki-syncadaptor` to `plugins` field in the `tiddlywiki.info` in your wiki folder, similar what can be done by `scripts/addToPluginList.js`.
+1. Add `$:/plugins/linonetwo/solid-tiddlywiki-syncadaptor/about` to the `/$__DefaultTiddlers.tid` as what `scripts/createDefaultTiddlers.js` will do.
+
 ## Files stored on the POD
 
 Only user modified tiddlers will be synced to the SoLiD POD, likes `$:/StoryList` and other user created tiddlers.
