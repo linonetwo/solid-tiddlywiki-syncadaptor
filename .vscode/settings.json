@@ -4,7 +4,8 @@
   "javascript.validate.enable": false,
   "cSpell.words": [
     "allsettled",
-    "caroot"
+    "caroot",
+    "rendertiddler"
   ],
   "cSpell.enabledLanguageIds": [
     "asciidoc",
